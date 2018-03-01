@@ -1,0 +1,297 @@
+#pragma once
+#ifndef _IOS_
+#define _IOS_
+
+#include <iosfwd>
+#include <type_traits>//
+#include <system_error>//
+#include <string>
+
+namespace STD
+{
+    typedef int streamoff;
+    typedef int streamsize;
+    enum class io_errc;
+
+    //overload some operators
+    template <class stateT>
+    class fpos
+    {
+    public:
+        // 27.5.4.1 Members
+        stateT state() const
+        {
+            return st;
+        }
+
+        void state(stateT s)
+        {
+            st = s;
+        }
+
+    private:
+        stateT st; // exposition only
+    };
+
+    class ios_base
+    {
+    public:
+        class failure : public system_error
+        {
+        public:
+            explicit failure(const string& msg, const error_code& ec = io_errc::stream)
+                : system_error(ec, msg)
+            {
+            }
+
+            explicit failure(const char* msg, const error_code& ec = io_errc::stream)
+                : system_error(ec, msg)
+            {
+            }
+        };
+
+        // 27.5.3.1.2 fmtflags
+        typedef unsigned fmtflags;//
+        static constexpr fmtflags boolalpha = 2;
+        static constexpr fmtflags dec = 4;
+        static constexpr fmtflags fixed = 8;
+        static constexpr fmtflags hex = 16;
+        static constexpr fmtflags internal = 32;
+        static constexpr fmtflags left = 64;
+        static constexpr fmtflags oct = 128;
+        static constexpr fmtflags right = 256;
+        static constexpr fmtflags scientific = 512;
+        static constexpr fmtflags showbase = 1024;
+        static constexpr fmtflags showpoint = 2048;
+        static constexpr fmtflags showpos = 4096;
+        static constexpr fmtflags skipws = 8192;
+        static constexpr fmtflags unitbuf = 16384;
+        static constexpr fmtflags uppercase = 32768;
+        static constexpr fmtflags adjustfield = left | right | internal;
+        static constexpr fmtflags basefield = dec | oct | hex;
+        static constexpr fmtflags floatfield = scientific | fixed;
+        // 27.5.3.1.3 iostate
+        typedef unsigned iostate;//
+        static constexpr iostate badbit = 1;
+        static constexpr iostate eofbit = 2;
+        static constexpr iostate failbit = 4;
+        static constexpr iostate goodbit = 0;
+        // 27.5.3.1.4 openmode
+        typedef unsigned openmode;
+        static constexpr openmode app = 1;
+        static constexpr openmode ate = 2;
+        static constexpr openmode binary = 4;
+        static constexpr openmode in = 8;
+        static constexpr openmode out = 16;
+        static constexpr openmode trunc = 32;
+        // 27.5.3.1.5 seekdir
+        typedef unsigned seekdir;
+        static constexpr seekdir beg = 1;
+        static constexpr seekdir cur = 2;
+        static constexpr seekdir end = 4;
+
+        class Init
+        {
+        public:
+            Init();
+
+            ~Init()
+            {
+                if (init_cnt == 1)
+                {
+                    /*cout.flush();
+                    cerr.flush();
+                    clog.flush();
+                    wcout.flush();
+                    wcerr.flush();
+                    wclog.flush();*/
+                }
+                --init_cnt;
+            }
+        private:
+            static int init_cnt; // exposition only
+        };
+
+        // 27.5.3.2 fmtflags state:
+        fmtflags flags() const
+        {
+            return mCurrent;
+        }
+
+        fmtflags flags(fmtflags fmtfl)
+        {
+            auto temp = mCurrent;
+            mCurrent = fmtfl;
+            return temp;
+        }
+
+        fmtflags setf(fmtflags fmtfl)
+        {
+            auto temp = mCurrent;
+            mCurrent |= fmtfl;
+            return temp;
+        }
+
+        fmtflags setf(fmtflags fmtfl, fmtflags mask)
+        {
+            auto temp = mCurrent;
+            unsetf(mask);
+            mCurrent |= (fmtfl & mask);
+            return temp;
+        }
+
+        void unsetf(fmtflags mask)
+        {
+            mCurrent ^= mask; //clear mask
+        }
+
+        streamsize precision() const
+        {
+            return mPrecision;
+        }
+
+        streamsize precision(streamsize prec)
+        {
+            auto temp = mPrecision;
+            mPrecision = prec;
+            return temp;
+        }
+
+        streamsize width() const
+        {
+            return mWidth;
+        }
+
+        streamsize width(streamsize wide)
+        {
+            auto temp = mWidth;
+            mWidth = wide;
+            return temp;
+        }
+
+        // 27.5.3.3 locales:
+        //locale imbue(const locale& loc);
+        //locale getloc() const;
+
+        // 27.5.3.5 storage:
+        static int xalloc()
+        {
+            return index++;//
+        }
+
+        long& iword(int index);
+        void*& pword(int index);
+        // destructor
+        virtual ~ios_base();
+        // 27.5.3.6 callbacks;
+        enum event { erase_event, imbue_event, copyfmt_event };
+        typedef void(*event_callback)(event, ios_base&, int index);
+        void register_callback(event_callback fn, int index);
+        ios_base(const ios_base&) = delete;
+        ios_base& operator=(const ios_base&) = delete;
+        static bool sync_with_stdio(bool sync = true);
+    protected:
+        ios_base();
+    private:
+        static int index; // exposition only
+        long* iarray; // exposition only
+        void** parray; // exposition only
+
+        fmtflags mCurrent;
+        streamsize mPrecision;
+        streamsize mWidth;
+    };
+
+    int ios_base::Init::init_cnt = 0;
+
+    template <class charT, class traits = char_traits<charT> >
+    class basic_ios : public ios_base
+    {
+    public:
+        // types:
+        typedef charT char_type;
+        typedef typename traits::int_type int_type;
+        typedef typename traits::pos_type pos_type;
+        typedef typename traits::off_type off_type;
+        typedef traits traits_type;
+        explicit operator bool() const;
+        bool operator!() const;
+        iostate rdstate() const;
+        void clear(iostate state = goodbit);
+        void setstate(iostate state);
+        bool good() const;
+        bool eof() const;
+        bool fail() const;
+        bool bad() const;
+        iostate exceptions() const;
+        void exceptions(iostate except);
+
+        // 27.5.5.2 Constructor/destructor:
+        explicit basic_ios(basic_streambuf<charT, traits>* sb)
+        {
+            init(sb);
+        }
+
+        virtual ~basic_ios();
+
+        // 27.5.5.3 Members:
+        basic_ostream<charT, traits>* tie() const;
+        basic_ostream<charT, traits>* tie(basic_ostream<charT, traits>* tiestr);
+        basic_streambuf<charT, traits>* rdbuf() const;
+        basic_streambuf<charT, traits>* rdbuf(basic_streambuf<charT, traits>* sb);
+        basic_ios& copyfmt(const basic_ios& rhs);
+        char_type fill() const;
+        char_type fill(char_type ch);
+        //locale imbue(const locale& loc);
+        char narrow(char_type c, char dfault) const;
+        char_type widen(char c) const;
+        basic_ios(const basic_ios&) = delete;
+        basic_ios& operator=(const basic_ios&) = delete;
+    protected:
+        basic_ios();
+        void init(basic_streambuf<charT, traits>* sb);
+        void move(basic_ios& rhs);
+        void move(basic_ios&& rhs);
+        void swap(basic_ios& rhs) noexcept;
+        void set_rdbuf(basic_streambuf<charT, traits>* sb);
+    };
+
+    // 27.5.6, manipulators:
+    ios_base& boolalpha(ios_base& str);
+    ios_base& noboolalpha(ios_base& str);
+    ios_base& showbase(ios_base& str);
+    ios_base& noshowbase(ios_base& str);
+    ios_base& showpoint(ios_base& str);
+    ios_base& noshowpoint(ios_base& str);
+    ios_base& showpos(ios_base& str);
+    ios_base& noshowpos(ios_base& str);
+    ios_base& skipws(ios_base& str);
+    ios_base& noskipws(ios_base& str);
+    ios_base& uppercase(ios_base& str);
+    ios_base& nouppercase(ios_base& str);
+    ios_base& unitbuf(ios_base& str);
+    ios_base& nounitbuf(ios_base& str);
+    // 27.5.6.2 adjustfield:
+    ios_base& internal (ios_base& str);
+    ios_base& left(ios_base& str);
+    ios_base& right(ios_base& str);
+    // 27.5.6.3 basefield:
+    ios_base& dec(ios_base& str);
+    ios_base& hex(ios_base& str);
+    ios_base& oct(ios_base& str);
+    // 27.5.6.4 floatfield:
+    ios_base& fixed(ios_base& str);
+    ios_base& scientific(ios_base& str);
+    ios_base& hexfloat(ios_base& str);
+    ios_base& defaultfloat(ios_base& str);
+    // 27.5.6.5 error reporting:
+    enum class io_errc {
+        stream = 1
+    };
+    template <> struct is_error_code_enum<io_errc> : public true_type { };
+    error_code make_error_code(io_errc e) noexcept;
+    error_condition make_error_condition(io_errc e) noexcept;
+    const error_category& iostream_category() noexcept;
+}
+
+#endif

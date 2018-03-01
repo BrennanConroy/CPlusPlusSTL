@@ -1,0 +1,421 @@
+#pragma once
+
+#ifndef _REGEX_
+#define _REGEX_
+
+#include <initializer_list>
+#include <stdexcept>
+#include <locale>
+
+namespace STD
+{
+    // 28.5, regex constants:
+    namespace regex_constants
+    {
+        enum error_type;
+    } // namespace regex_constants
+
+      // 28.6, class regex_error:
+    class regex_error : public runtime_error
+    {
+    public:
+        explicit regex_error(regex_constants::error_type ecode);
+        regex_constants::error_type code() const;
+    };
+
+    // 28.7, class template regex_traits:
+    template <class charT>
+    struct regex_traits
+    {
+    public:
+        typedef charT char_type;
+        typedef basic_string<char_type> string_type;
+        typedef locale locale_type;
+        typedef bitmask_type char_class_type;
+
+        regex_traits();
+
+        static size_t length(const char_type* p)
+        {
+            return char_traits<charT>::length(p);
+        }
+
+        charT translate(charT c) const
+        {
+            return c;
+        }
+
+        charT translate_nocase(charT c) const;
+        /*{
+            return use_facet<ctype<charT> >(getloc()).tolower(c);
+        }*/
+
+        template <class ForwardIterator>
+        string_type transform(ForwardIterator first, ForwardIterator last) const;
+
+        template <class ForwardIterator>
+        string_type transform_primary(
+            ForwardIterator first, ForwardIterator last) const;
+
+        template <class ForwardIterator>
+        string_type lookup_collatename(
+            ForwardIterator first, ForwardIterator last) const;
+
+        template <class ForwardIterator>
+        char_class_type lookup_classname(
+            ForwardIterator first, ForwardIterator last, bool icase = false) const;
+
+        bool isctype(charT c, char_class_type f) const;
+
+        int value(charT ch, int radix) const
+        {
+            //radix must be 8, 10, or 16
+            return radix; //todo
+        }
+
+        locale_type imbue(locale_type l);
+
+        locale_type getloc() const;
+    };
+
+    // 28.8, class template basic_regex:
+    template <class charT, class traits = regex_traits<charT> > class basic_regex;
+    typedef basic_regex<char> regex;
+    typedef basic_regex<wchar_t> wregex;
+    // 28.8.6, basic_regex swap:
+    template <class charT, class traits>
+    void swap(basic_regex<charT, traits>& e1, basic_regex<charT, traits>& e2);
+    // 28.9, class template sub_match:
+    template <class BidirectionalIterator>
+    class sub_match;
+    typedef sub_match<const char*> csub_match;
+    typedef sub_match<const wchar_t*> wcsub_match;
+    typedef sub_match<string::const_iterator> ssub_match;
+    typedef sub_match<wstring::const_iterator> wssub_match;
+    // 28.9.2, sub_match non-member operators:
+    template <class BiIter>
+    bool operator==(const sub_match<BiIter>& lhs, const sub_match<BiIter>& rhs);
+    template <class BiIter>
+    bool operator!=(const sub_match<BiIter>& lhs, const sub_match<BiIter>& rhs);
+    template <class BiIter>
+    bool operator<(const sub_match<BiIter>& lhs, const sub_match<BiIter>& rhs);
+    template <class BiIter>
+    bool operator<=(const sub_match<BiIter>& lhs, const sub_match<BiIter>& rhs);
+    template <class BiIter>
+    bool operator>=(const sub_match<BiIter>& lhs, const sub_match<BiIter>& rhs);
+    template <class BiIter>
+    bool operator>(const sub_match<BiIter>& lhs, const sub_match<BiIter>& rhs);
+    template <class BiIter, class ST, class SA>
+    bool operator==(
+        const basic_string<
+        typename iterator_traits<BiIter>::value_type, ST, SA>& lhs,
+        const sub_match<BiIter>& rhs);
+    template <class BiIter, class ST, class SA>
+    bool operator!=(
+        const basic_string<
+        typename iterator_traits<BiIter>::value_type, ST, SA>& lhs,
+        const sub_match<BiIter>& rhs);
+    template <class BiIter, class ST, class SA>
+    bool operator<(
+        const basic_string<
+        typename iterator_traits<BiIter>::value_type, ST, SA>& lhs,
+        const sub_match<BiIter>& rhs);
+    template <class BiIter, class ST, class SA>
+    bool operator>(
+        const basic_string<
+        typename iterator_traits<BiIter>::value_type, ST, SA>& lhs,
+        const sub_match<BiIter>& rhs);
+    template <class BiIter, class ST, class SA>
+    bool operator>=(
+        const basic_string<
+        typename iterator_traits<BiIter>::value_type, ST, SA>& lhs,
+        const sub_match<BiIter>& rhs);
+    template <class BiIter, class ST, class SA>
+    bool operator<=(
+        const basic_string<
+        typename iterator_traits<BiIter>::value_type, ST, SA>& lhs,
+        const sub_match<BiIter>& rhs);
+    template <class BiIter, class ST, class SA>
+    bool operator==(
+        const sub_match<BiIter>& lhs,
+        const basic_string<
+        typename iterator_traits<BiIter>::value_type, ST, SA>& rhs);
+    template <class BiIter, class ST, class SA>
+    bool operator!=(
+        const sub_match<BiIter>& lhs,
+        const basic_string<
+        typename iterator_traits<BiIter>::value_type, ST, SA>& rhs);
+    template <class BiIter, class ST, class SA>
+    bool operator<(
+        const sub_match<BiIter>& lhs,
+        const basic_string<
+        typename iterator_traits<BiIter>::value_type, ST, SA>& rhs);
+    template <class BiIter, class ST, class SA>
+    bool operator>(
+        const sub_match<BiIter>& lhs,
+        const basic_string<
+        typename iterator_traits<BiIter>::value_type, ST, SA>& rhs);
+    template <class BiIter, class ST, class SA>
+    bool operator>=(
+        const sub_match<BiIter>& lhs,
+        const basic_string<
+        typename iterator_traits<BiIter>::value_type, ST, SA>& rhs);
+    template <class BiIter, class ST, class SA>
+    bool operator<=(
+        const sub_match<BiIter>& lhs,
+        const basic_string<
+        typename iterator_traits<BiIter>::value_type, ST, SA>& rhs);
+    template <class BiIter>
+    bool operator==(typename iterator_traits<BiIter>::value_type const* lhs,
+        const sub_match<BiIter>& rhs);
+    template <class BiIter>
+    bool operator!=(typename iterator_traits<BiIter>::value_type const* lhs,
+        const sub_match<BiIter>& rhs);
+    template <class BiIter>
+    bool operator<(typename iterator_traits<BiIter>::value_type const* lhs,
+        const sub_match<BiIter>& rhs);
+    template <class BiIter>
+    bool operator>(typename iterator_traits<BiIter>::value_type const* lhs,
+        const sub_match<BiIter>& rhs);
+    template <class BiIter>
+    bool operator>=(typename iterator_traits<BiIter>::value_type const* lhs,
+        const sub_match<BiIter>& rhs);
+    template <class BiIter>
+    bool operator<=(typename iterator_traits<BiIter>::value_type const* lhs,
+        const sub_match<BiIter>& rhs);
+    template <class BiIter>
+    bool operator==(const sub_match<BiIter>& lhs,
+        typename iterator_traits<BiIter>::value_type const* rhs);
+    template <class BiIter>
+    bool operator!=(const sub_match<BiIter>& lhs,
+        typename iterator_traits<BiIter>::value_type const* rhs);
+    template <class BiIter>
+    bool operator<(const sub_match<BiIter>& lhs,
+        typename iterator_traits<BiIter>::value_type const* rhs);
+    template <class BiIter>
+    bool operator>(const sub_match<BiIter>& lhs,
+        typename iterator_traits<BiIter>::value_type const* rhs);
+    template <class BiIter>
+    bool operator>=(const sub_match<BiIter>& lhs,
+        typename iterator_traits<BiIter>::value_type const* rhs);
+    template <class BiIter>
+    bool operator<=(const sub_match<BiIter>& lhs,
+        typename iterator_traits<BiIter>::value_type const* rhs);
+    template <class BiIter>
+    bool operator==(typename iterator_traits<BiIter>::value_type const& lhs,
+        const sub_match<BiIter>& rhs);
+    template <class BiIter>
+    bool operator!=(typename iterator_traits<BiIter>::value_type const& lhs,
+        const sub_match<BiIter>& rhs);
+    template <class BiIter>
+    bool operator<(typename iterator_traits<BiIter>::value_type const& lhs,
+        const sub_match<BiIter>& rhs);
+    template <class BiIter>
+    bool operator>(typename iterator_traits<BiIter>::value_type const& lhs,
+        const sub_match<BiIter>& rhs);
+    template <class BiIter>
+    bool operator>=(typename iterator_traits<BiIter>::value_type const& lhs,
+        const sub_match<BiIter>& rhs);
+    template <class BiIter>
+    bool operator<=(typename iterator_traits<BiIter>::value_type const& lhs,
+        const sub_match<BiIter>& rhs);
+    template <class BiIter>
+    bool operator==(const sub_match<BiIter>& lhs,
+        typename iterator_traits<BiIter>::value_type const& rhs);
+    template <class BiIter>
+    bool operator!=(const sub_match<BiIter>& lhs,
+        typename iterator_traits<BiIter>::value_type const& rhs);
+    template <class BiIter>
+    bool operator<(const sub_match<BiIter>& lhs,
+        typename iterator_traits<BiIter>::value_type const& rhs);
+    template <class BiIter>
+    bool operator>(const sub_match<BiIter>& lhs,
+        typename iterator_traits<BiIter>::value_type const& rhs);
+    template <class BiIter>
+    bool operator>=(const sub_match<BiIter>& lhs,
+        typename iterator_traits<BiIter>::value_type const& rhs);
+    template <class BiIter>
+    bool operator<=(const sub_match<BiIter>& lhs,
+        typename iterator_traits<BiIter>::value_type const& rhs);
+    template <class charT, class ST, class BiIter>
+    basic_ostream<charT, ST>&
+        operator<<(basic_ostream<charT, ST>& os, const sub_match<BiIter>& m);
+    // 28.10, class template match_results:
+    template <class BidirectionalIterator,
+        class Allocator = allocator<sub_match<BidirectionalIterator> > >
+        class match_results;
+    typedef match_results<const char*> cmatch;
+    typedef match_results<const wchar_t*> wcmatch;
+    typedef match_results<string::const_iterator> smatch;
+    typedef match_results<wstring::const_iterator> wsmatch;
+    // match_results comparisons
+    template <class BidirectionalIterator, class Allocator>
+    bool operator== (const match_results<BidirectionalIterator, Allocator>& m1,
+        const match_results<BidirectionalIterator, Allocator>& m2);
+    template <class BidirectionalIterator, class Allocator>
+    bool operator!= (const match_results<BidirectionalIterator, Allocator>& m1,
+        const match_results<BidirectionalIterator, Allocator>& m2);
+    // 28.10.7, match_results swap:
+    template <class BidirectionalIterator, class Allocator>
+    void swap(match_results<BidirectionalIterator, Allocator>& m1,
+        match_results<BidirectionalIterator, Allocator>& m2);
+    // 28.11.2, function template regex_match:
+    template <class BidirectionalIterator, class Allocator,
+        class charT, class traits>
+        bool regex_match(BidirectionalIterator first, BidirectionalIterator last,
+            match_results<BidirectionalIterator, Allocator>& m,
+            const basic_regex<charT, traits>& e,
+            regex_constants::match_flag_type flags =
+            regex_constants::match_default);
+    template <class BidirectionalIterator, class charT, class traits>
+    bool regex_match(BidirectionalIterator first, BidirectionalIterator last,
+        const basic_regex<charT, traits>& e,
+        regex_constants::match_flag_type flags =
+        regex_constants::match_default);
+    template <class charT, class Allocator, class traits>
+    bool regex_match(const charT* str, match_results<const charT*, Allocator>& m,
+        const basic_regex<charT, traits>& e,
+        regex_constants::match_flag_type flags =
+        regex_constants::match_default);
+    template <class ST, class SA, class Allocator, class charT, class traits>
+    bool regex_match(const basic_string<charT, ST, SA>& s,
+        match_results<
+        typename basic_string<charT, ST, SA>::const_iterator,
+        Allocator>& m,
+        const basic_regex<charT, traits>& e,
+        regex_constants::match_flag_type flags =
+        regex_constants::match_default);
+    template <class ST, class SA, class Allocator, class charT, class traits>
+    bool regex_match(const basic_string<charT, ST, SA>&&,
+        match_results<
+        typename basic_string<charT, ST, SA>::const_iterator,
+        Allocator>&,
+        const basic_regex<charT, traits>&,
+        regex_constants::match_flag_type =
+        regex_constants::match_default) = delete;
+    template <class charT, class traits>
+    bool regex_match(const charT* str,
+        const basic_regex<charT, traits>& e,
+        regex_constants::match_flag_type flags =
+        regex_constants::match_default);
+    template <class ST, class SA, class charT, class traits>
+    bool regex_match(const basic_string<charT, ST, SA>& s,
+        const basic_regex<charT, traits>& e,
+        regex_constants::match_flag_type flags =
+        regex_constants::match_default);
+    // 28.11.3, function template regex_search:
+    template <class BidirectionalIterator, class Allocator,
+        class charT, class traits>
+        bool regex_search(BidirectionalIterator first, BidirectionalIterator last,
+            match_results<BidirectionalIterator, Allocator>& m,
+            const basic_regex<charT, traits>& e,
+            regex_constants::match_flag_type flags =
+            regex_constants::match_default);
+    template <class BidirectionalIterator, class charT, class traits>
+    bool regex_search(BidirectionalIterator first, BidirectionalIterator last,
+        const basic_regex<charT, traits>& e,
+        regex_constants::match_flag_type flags =
+        regex_constants::match_default);
+    template <class charT, class Allocator, class traits>
+    bool regex_search(const charT* str,
+        match_results<const charT*, Allocator>& m,
+        const basic_regex<charT, traits>& e,
+        regex_constants::match_flag_type flags =
+        regex_constants::match_default);
+    template <class charT, class traits>
+    bool regex_search(const charT* str,
+        const basic_regex<charT, traits>& e,
+        regex_constants::match_flag_type flags =
+        regex_constants::match_default);
+    template <class ST, class SA, class charT, class traits>
+    bool regex_search(const basic_string<charT, ST, SA>& s,
+        const basic_regex<charT, traits>& e,
+        regex_constants::match_flag_type flags =
+        regex_constants::match_default);
+    template <class ST, class SA, class Allocator, class charT, class traits>
+    bool regex_search(const basic_string<charT, ST, SA>& s,
+        match_results<
+        typename basic_string<charT, ST, SA>::const_iterator,
+        Allocator>& m,
+        const basic_regex<charT, traits>& e,
+        regex_constants::match_flag_type flags =
+        regex_constants::match_default);
+    template <class ST, class SA, class Allocator, class charT, class traits>
+    bool regex_search(const basic_string<charT, ST, SA>&&,
+        match_results<
+        typename basic_string<charT, ST, SA>::const_iterator,
+        Allocator>&,
+        const basic_regex<charT, traits>&,
+        regex_constants::match_flag_type =
+        regex_constants::match_default) = delete;
+    // 28.11.4, function template regex_replace:
+    template <class OutputIterator, class BidirectionalIterator,
+        class traits, class charT, class ST, class SA>
+        OutputIterator
+        regex_replace(OutputIterator out,
+            BidirectionalIterator first, BidirectionalIterator last,
+            const basic_regex<charT, traits>& e,
+            const basic_string<charT, ST, SA>& fmt,
+            regex_constants::match_flag_type flags =
+            regex_constants::match_default);
+    template <class OutputIterator, class BidirectionalIterator,
+        class traits, class charT>
+        OutputIterator
+        regex_replace(OutputIterator out,
+            BidirectionalIterator first, BidirectionalIterator last,
+            const basic_regex<charT, traits>& e,
+            const charT* fmt,
+            regex_constants::match_flag_type flags =
+            regex_constants::match_default);
+    template <class traits, class charT, class ST, class SA,
+        class FST, class FSA>
+        basic_string<charT, ST, SA>
+        regex_replace(const basic_string<charT, ST, SA>& s,
+            const basic_regex<charT, traits>& e,
+            const basic_string<charT, FST, FSA>& fmt,
+            regex_constants::match_flag_type flags =
+            regex_constants::match_default);
+    template <class traits, class charT, class ST, class SA>
+    basic_string<charT, ST, SA>
+        regex_replace(const basic_string<charT, ST, SA>& s,
+            const basic_regex<charT, traits>& e,
+            const charT* fmt,
+            regex_constants::match_flag_type flags =
+            regex_constants::match_default);
+    template <class traits, class charT, class ST, class SA>
+    basic_string<charT>
+        regex_replace(const charT* s,
+            const basic_regex<charT, traits>& e,
+            const basic_string<charT, ST, SA>& fmt,
+            regex_constants::match_flag_type flags =
+            regex_constants::match_default);
+    template <class traits, class charT>
+    basic_string<charT>
+        regex_replace(const charT* s,
+            const basic_regex<charT, traits>& e,
+            const charT* fmt,
+            regex_constants::match_flag_type flags =
+            regex_constants::match_default);
+    // 28.12.1, class template regex_iterator:
+    template <class BidirectionalIterator,
+        class charT = typename iterator_traits<
+        BidirectionalIterator>::value_type,
+        class traits = regex_traits<charT> >
+        class regex_iterator;
+    typedef regex_iterator<const char*> cregex_iterator;
+    typedef regex_iterator<const wchar_t*> wcregex_iterator;
+    typedef regex_iterator<string::const_iterator> sregex_iterator;
+    typedef regex_iterator<wstring::const_iterator> wsregex_iterator;
+    // 28.12.2, class template regex_token_iterator:
+    template <class BidirectionalIterator,
+        class charT = typename iterator_traits<
+        BidirectionalIterator>::value_type,
+        class traits = regex_traits<charT> >
+        class regex_token_iterator;
+    typedef regex_token_iterator<const char*> cregex_token_iterator;
+    typedef regex_token_iterator<const wchar_t*> wcregex_token_iterator;
+    typedef regex_token_iterator<string::const_iterator> sregex_token_iterator;
+    typedef regex_token_iterator<wstring::const_iterator> wsregex_token_iterator;
+}
+
+#endif

@@ -1,0 +1,34 @@
+namespace STD
+{
+    typedef DBL_DIG;
+    typedef DBL_EPSILON;
+    typedef DBL_MANT_DIG;
+    typedef DBL_MAX;
+    typedef DBL_MAX_10_EXP;
+    typedef DBL_MAX_EXP;
+    typedef DBL_MIN;
+    typedef DBL_MIN_10_EXP;
+    typedef DBL_MIN_EXP;
+    typedef DECIMAL_DIG;
+    typedef FLT_DIG;
+    typedef FLT_EPSILON;
+    typedef FLT_EVAL_METHOD;
+    typedef FLT_MANT_DIG;
+    typedef FLT_MAX;
+    typedef FLT_MAX_10_EXP;
+    typedef FLT_MAX_EXP;
+    typedef FLT_MIN;
+    typedef FLT_MIN_10_EXP;
+    typedef FLT_MIN_EXP;
+    typedef FLT_RADIX;
+    typedef FLT_ROUNDS;
+    typedef LDBL_DIG;
+    typedef LDBL_EPSILON;
+    typedef LDBL_MANT_DIG;
+    typedef LDBL_MAX_10_EXP;
+    typedef LDBL_MAX_EXP;
+    typedef LDBL_MAX;
+    typedef LDBL_MIN;
+    typedef LDBL_MIN_10_EXP;
+    typedef LDBL_MIN_EXP;
+}

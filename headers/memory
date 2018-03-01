@@ -1,0 +1,587 @@
+#pragma once
+
+#ifndef _MEMORY_
+#define _MEMORY_
+
+#include <cstddef>
+#include <type_traits>
+#include <iosfwd>
+
+namespace STD
+{
+    namespace _internal
+    {
+        template <typename T>
+        class Test
+        {
+        public:
+            template <typename U>
+            static typename U::element_type SFINAE(typename U::element_type);
+            template <typename U>
+            static U SFINAE(...);
+
+            typedef typename decltype(SFINAE<T>(0)) type;
+        };
+
+        template <typename T>
+        class Test2
+        {
+        public:
+            template <typename U>
+            static typename U::difference_type SFINAE(typename U::difference_type);
+            template <typename U>
+            static STD::ptrdiff_t SFINAE(...);
+
+            typedef typename decltype(SFINAE<T>(0)) type;
+        };
+
+        /*template <typename Ptr, typename U>
+        class Test3
+        {
+        public:
+            template <typename Args>
+            static typename Ptr::rebind<U> SFINAE(typename Ptr::rebind<U>);
+            template <typename Args>
+            static typename 
+        };*/
+    }
+
+    // 20.7.3, pointer traits
+    template <class Ptr>
+    struct pointer_traits
+    {
+        typedef Ptr pointer;
+        typedef typename _internal::Test<Ptr>::type element_type;
+        typedef typename _internal::Test2<Ptr>::type difference_type;
+
+        /*template <class U>
+        using rebind = see below;
+
+        static pointer pointer_to(see below r);*/
+    };
+
+    template <class T>
+    struct pointer_traits<T*>
+    {
+        typedef T* pointer;
+        typedef T element_type;
+        typedef STD::ptrdiff_t difference_type;
+
+        template <class U>
+        using rebind = U*;
+
+        //static pointer pointer_to(see below r) noexcept;
+    };
+//
+//    // 20.7.4, pointer safety
+//    enum class pointer_safety { relaxed, preferred, strict };
+//    void declare_reachable(void* p);
+//    template <class T> T* undeclare_reachable(T* p);
+//    void declare_no_pointers(char* p, size_t n);
+//    void undeclare_no_pointers(char* p, size_t n);
+//    pointer_safety get_pointer_safety() noexcept;
+//    // 20.7.5, pointer alignment function
+//    void* align(size_t alignment, size_t size,
+//        void*& ptr, size_t& space);
+//    // 20.7.6, allocator argument tag
+//    struct allocator_arg_t { };
+//    constexpr allocator_arg_t allocator_arg{};
+//    // 20.7.7, uses_allocator
+//    template <class T, class Alloc> struct uses_allocator;
+//
+
+// 20.7.9, the default allocator:
+    template <class T>
+    class allocator;
+
+    template <>
+    class allocator<void>
+    {
+    public:
+        typedef void* pointer;
+        typedef const void* const_pointer;
+        // reference-to-void members are impossible.
+        typedef void value_type;
+        template <class U> struct rebind { typedef allocator<U> other; };
+    };
+
+    template <class T>
+    class allocator {
+    public:
+        typedef size_t size_type;
+        typedef STD::ptrdiff_t difference_type;
+        typedef T* pointer;
+        typedef const T* const_pointer;
+        typedef T& reference;
+        typedef const T& const_reference;
+        typedef T value_type;
+
+        template <class U>
+        struct rebind { typedef allocator<U> other; };
+
+        typedef true_type propagate_on_container_move_assignment;
+        typedef true_type is_always_equal;
+
+        allocator() noexcept
+        {
+        }
+
+        allocator(const allocator&) noexcept
+        {
+        }
+
+        template <class U>
+        allocator(const allocator<U>&) noexcept
+        {
+        }
+
+        ~allocator()
+        {
+        }
+
+        pointer address(reference x) const noexcept
+        {
+            return &x;
+        }
+
+        const_pointer address(const_reference x) const noexcept
+        {
+            return &x;
+        }
+
+        pointer allocate(size_type n, allocator<void>::const_pointer hint = 0)
+        {
+            return (pointer)::operator new(n);
+        }
+
+        void deallocate(pointer p, size_type n)
+        {
+            ::operator delete(p, n);
+        }
+
+        size_type max_size() const noexcept;
+
+        template<class U, class... Args>
+        void construct(U* p, Args&&... args)
+        {
+            ::operator new((void *)p) U(forward<Args>(args)...);
+        }
+
+        template <class U>
+        void destroy(U* p)
+        {
+            p->~U();
+        }
+    };
+
+    // 20.7.8, allocator traits
+    namespace _internal
+    {
+        template <class Alloc>
+        struct allocator_traits_helper
+        {
+        private:
+            template <typename U>
+            static typename U::propagate_on_container_swap SFINAE(typename U::propagate_on_container_swap);
+            template <typename U>
+            static false_type SFINAE(...);
+        public:
+            typedef typename decltype(SFINAE<Alloc>(0)) type;
+            /*template <class Base, class Derived>
+            struct is_base_of
+            {
+            private:
+                static constexpr bool val(typename remove_reference<Base>::type *) { return true; }
+                static constexpr bool val(...) { return false; }
+            public:
+                static constexpr bool value = val(reinterpret_cast<typename remove_reference<Derived>::type *>(0));
+            };*/
+        };
+    }
+
+    template <class Alloc>
+    struct allocator_traits
+    {
+        typedef Alloc allocator_type;
+        typedef typename Alloc::value_type value_type;
+        typedef typename Alloc::pointer pointer; //todo
+        typedef typename Alloc::const_pointer const_pointer; //todo
+        //typedef typename Alloc::void_pointer void_pointer; //todo
+        //typedef typename Alloc::const_void_pointer const_void_pointer; //todo
+        typedef typename Alloc::difference_type difference_type; //todo
+        typedef typename Alloc::size_type size_type; //todo
+        //typedef typename Alloc::propagate_on_container_copy_assignment propagate_on_container_copy_assignment; //todo
+        //typedef typename Alloc::propagate_on_container_move_assignment propagate_on_container_move_assignment; //todo
+
+        typedef typename _internal::allocator_traits_helper<Alloc>::type propagate_on_container_swap;
+        //typedef typename Alloc::propagate_on_container_swap propagate_on_container_swap; //todo
+
+        typedef typename Alloc::is_always_equal is_always_equal; //todo
+        //template <class T> using rebind_alloc = Alloc::rebind<T>::other; //todo
+        //template <class T> using rebind_traits = allocator_traits<rebind_alloc<T>>;
+
+        static pointer allocate(Alloc& a, size_type n)
+        {
+            return a.allocate(n);
+        }
+
+        /*static pointer allocate(Alloc& a, size_type n, const_void_pointer hint)
+        {
+            return a.allocate(n, hint);
+        }*/
+
+        static void deallocate(Alloc& a, pointer p, size_type n)
+        {
+            a.deallocate(p, n);
+        }
+
+        template <class T, class... Args>
+        static void construct(Alloc& a, T* p, Args&&... args)
+        {
+            a.construct(p, forward<Args>(args)...); //todo
+        }
+
+        template <class T>
+        static void destroy(Alloc& a, T* p)
+        {
+            a.destroy(p); //todo
+        }
+
+        static size_type max_size(const Alloc& a) noexcept
+        {
+            return a.max_size(); //todo
+        }
+
+        static Alloc select_on_container_copy_construction(const Alloc& rhs)
+        {
+            return rhs.select_on_container_copy_construction(); //todo
+        }
+    };
+
+//
+//    template <class T, class U>
+//    bool operator==(const allocator<T>&, const allocator<U>&) noexcept;
+//    template <class T, class U>
+//    bool operator!=(const allocator<T>&, const allocator<U>&) noexcept;
+//    // 20.7.10, raw storage iterator:
+//    template <class OutputIterator, class T> class raw_storage_iterator;
+//    // 20.7.11, temporary buffers:
+//    template <class T>
+//    pair<T*, ptrdiff_t> get_temporary_buffer(ptrdiff_t n) noexcept;
+//    template <class T>
+//    void return_temporary_buffer(T* p);
+
+    // 20.7.12, specialized algorithms:
+    template <class T>
+    T* addressof(T& r) noexcept
+    {
+        return &r;//T::operator&(r);
+    }
+
+//    template <class InputIterator, class ForwardIterator>
+//    ForwardIterator uninitialized_copy(InputIterator first, InputIterator last,
+//        ForwardIterator result);
+//    template <class InputIterator, class Size, class ForwardIterator>
+//    ForwardIterator uninitialized_copy_n(InputIterator first, Size n,
+//        ForwardIterator result);
+//    template <class ForwardIterator, class T>
+//    void uninitialized_fill(ForwardIterator first, ForwardIterator last,
+//        const T& x);
+//    template <class ForwardIterator, class Size, class T>
+//    ForwardIterator uninitialized_fill_n(ForwardIterator first, Size n, const T& x);
+
+    // 20.8.1 class template unique_ptr:
+    template <class T>
+    struct default_delete
+    {
+        constexpr default_delete() noexcept = default;
+
+        template <class U>
+        default_delete(const default_delete<U>& other) noexcept;
+        /*{
+
+        }*/
+
+        void operator()(T* ptr) const
+        {
+            delete ptr;
+        }
+    };
+
+    template <class T>
+    struct default_delete<T[]>
+    {
+        constexpr default_delete() noexcept = default;
+
+        template <class U>
+        default_delete(const default_delete<U[]>& other) noexcept;
+        /*{
+
+        }*/
+
+        template <class U>
+        void operator()(U* ptr) const
+        {
+            delete[] ptr;
+        }
+    };
+
+    namespace _internal
+    {
+        template <typename T, typename FallBack>
+        class has_pointer
+        {
+        private:
+            template <typename U> static typename U::pointer test(typename U::pointer);
+            template <typename U> static FallBack test(...);
+        public:
+            typedef decltype(test<T>(0)) type;
+        };
+    }
+
+    template <class T, class D = default_delete<T>>
+    class unique_ptr
+    {
+    public:
+        typedef T element_type;
+        typedef typename _internal::has_pointer<D, element_type *>::type pointer;
+        typedef D deleter_type;
+
+        // 20.8.1.2.1, constructors
+        constexpr unique_ptr() noexcept : mDeleter(), mPointer(nullptr)
+        {
+        }
+
+        explicit unique_ptr(pointer p) noexcept : mDeleter(), mPointer(p)
+        {
+        }
+
+        //unique_ptr(pointer p, see below d1) noexcept;
+        //unique_ptr(pointer p, see below d2) noexcept;
+
+        unique_ptr(unique_ptr&& u) noexcept
+            : mDeleter(forward<D>(u.mDeleter)), mPointer(forward<pointer>(u.mPointer))
+        {
+            u.mPointer = nullptr;
+        }
+
+        constexpr unique_ptr(nullptr_t) noexcept : unique_ptr()
+        {
+        }
+
+        /*template <class U, class E>
+        unique_ptr(unique_ptr<U, E>&& u) noexcept
+            : mDeleter(forward<E>(u.mDeleter)), mPointer(forward<U>(u.mPointer))
+        {
+            u.mPointer = nullptr;
+        }*/
+
+        // 20.8.1.2.2, destructor
+        ~unique_ptr()
+        {
+            mDeleter(mPointer);
+        }
+
+        // 20.8.1.2.3, assignment
+        unique_ptr& operator=(unique_ptr&& u) noexcept;
+        template <class U, class E> unique_ptr& operator=(unique_ptr<U, E>&& u) noexcept;
+        unique_ptr& operator=(nullptr_t) noexcept;
+        // 20.8.1.2.4, observers
+        //add_lvalue_reference_t<T> operator*() const;
+
+        pointer operator->() const noexcept
+        {
+            //if (get() == nullptr) //todo?
+            return get();
+        }
+
+        pointer get() const noexcept
+        {
+            return mPointer;
+        }
+
+        deleter_type& get_deleter() noexcept
+        {
+            return mDeleter;
+        }
+
+        const deleter_type& get_deleter() const noexcept
+        {
+            return mDeleter;
+        }
+
+        explicit operator bool() const noexcept
+        {
+            return get() != nullptr;
+        }
+
+        // 20.8.1.2.5 modifiers
+        pointer release() noexcept
+        {
+            auto tmp = mPointer;
+            mPointer = nullptr;
+            return tmp;
+        }
+
+        void reset(pointer p = pointer()) noexcept;
+
+        void swap(unique_ptr& u) noexcept
+        {
+            STD::swap(u.mPointer, mPointer);
+            STD::swap(u.mDeleter, mDeleter);
+        }
+
+        // disable copy from lvalue
+        unique_ptr(const unique_ptr&) = delete;
+        unique_ptr& operator=(const unique_ptr&) = delete;
+    private:
+        D mDeleter;
+        pointer mPointer;
+    };
+
+    template <class T, class D> class unique_ptr<T[], D>;
+    template <class T, class... Args> unique_ptr<T> make_unique(Args&&... args);
+    template <class T> unique_ptr<T> make_unique(size_t n);
+    //template <class T, class... Args> unspecified make_unique(Args&&...) = delete;
+    template <class T, class D> void swap(unique_ptr<T, D>& x, unique_ptr<T, D>& y) noexcept;
+    template <class T1, class D1, class T2, class D2>
+    bool operator==(const unique_ptr<T1, D1>& x, const unique_ptr<T2, D2>& y);
+    template <class T1, class D1, class T2, class D2>
+    bool operator!=(const unique_ptr<T1, D1>& x, const unique_ptr<T2, D2>& y);
+    template <class T1, class D1, class T2, class D2>
+    bool operator<(const unique_ptr<T1, D1>& x, const unique_ptr<T2, D2>& y);
+    template <class T1, class D1, class T2, class D2>
+    bool operator<=(const unique_ptr<T1, D1>& x, const unique_ptr<T2, D2>& y);
+    template <class T1, class D1, class T2, class D2>
+    bool operator>(const unique_ptr<T1, D1>& x, const unique_ptr<T2, D2>& y);
+    template <class T1, class D1, class T2, class D2>
+    bool operator>=(const unique_ptr<T1, D1>& x, const unique_ptr<T2, D2>& y);
+    template <class T, class D>
+    bool operator==(const unique_ptr<T, D>& x, nullptr_t) noexcept;
+    template <class T, class D>
+    bool operator==(nullptr_t, const unique_ptr<T, D>& y) noexcept;
+    template <class T, class D>
+    bool operator!=(const unique_ptr<T, D>& x, nullptr_t) noexcept;
+    template <class T, class D>
+    bool operator!=(nullptr_t, const unique_ptr<T, D>& y) noexcept;
+    template <class T, class D>
+    bool operator<(const unique_ptr<T, D>& x, nullptr_t);
+    template <class T, class D>
+    bool operator<(nullptr_t, const unique_ptr<T, D>& y);
+    template <class T, class D>
+    bool operator<=(const unique_ptr<T, D>& x, nullptr_t);
+    template <class T, class D>
+    bool operator<=(nullptr_t, const unique_ptr<T, D>& y);
+    template <class T, class D>
+    bool operator>(const unique_ptr<T, D>& x, nullptr_t);
+    template <class T, class D>
+    bool operator>(nullptr_t, const unique_ptr<T, D>& y);
+    template <class T, class D>
+    bool operator>=(const unique_ptr<T, D>& x, nullptr_t);
+    template <class T, class D>
+    bool operator>=(nullptr_t, const unique_ptr<T, D>& y);
+    // 20.8.2.1, class bad_weak_ptr:
+    class bad_weak_ptr;
+    // 20.8.2.2, class template shared_ptr:
+    template<class T> class shared_ptr;
+    // 20.8.2.2.6, shared_ptr creation
+    template<class T, class... Args> shared_ptr<T> make_shared(Args&&... args);
+    template<class T, class A, class... Args>
+    shared_ptr<T> allocate_shared(const A& a, Args&&... args);
+    // 20.8.2.2.7, shared_ptr comparisons:
+    template<class T, class U>
+    bool operator==(shared_ptr<T> const& a, shared_ptr<U> const& b) noexcept;
+    template<class T, class U>
+    bool operator!=(shared_ptr<T> const& a, shared_ptr<U> const& b) noexcept;
+    template<class T, class U>
+    bool operator<(shared_ptr<T> const& a, shared_ptr<U> const& b) noexcept;
+    template<class T, class U>
+    bool operator>(shared_ptr<T> const& a, shared_ptr<U> const& b) noexcept;
+    template<class T, class U>
+    bool operator<=(shared_ptr<T> const& a, shared_ptr<U> const& b) noexcept;
+    template<class T, class U>
+    bool operator>=(shared_ptr<T> const& a, shared_ptr<U> const& b) noexcept;
+    template <class T>
+    bool operator==(const shared_ptr<T>& x, nullptr_t) noexcept;
+    template <class T>
+    bool operator==(nullptr_t, const shared_ptr<T>& y) noexcept;
+    template <class T>
+    bool operator!=(const shared_ptr<T>& x, nullptr_t) noexcept;
+    template <class T>
+    bool operator!=(nullptr_t, const shared_ptr<T>& y) noexcept;
+    template <class T>
+    bool operator<(const shared_ptr<T>& x, nullptr_t) noexcept;
+    template <class T>
+    bool operator<(nullptr_t, const shared_ptr<T>& y) noexcept;
+    template <class T>
+    bool operator<=(const shared_ptr<T>& x, nullptr_t) noexcept;
+    template <class T>
+    bool operator<=(nullptr_t, const shared_ptr<T>& y) noexcept;
+    template <class T>
+    bool operator>(const shared_ptr<T>& x, nullptr_t) noexcept;
+    template <class T>
+    bool operator>(nullptr_t, const shared_ptr<T>& y) noexcept;
+    template <class T>
+    bool operator>=(const shared_ptr<T>& x, nullptr_t) noexcept;
+    template <class T>
+    bool operator>=(nullptr_t, const shared_ptr<T>& y) noexcept;
+    // 20.8.2.2.8, shared_ptr specialized algorithms:
+    template<class T> void swap(shared_ptr<T>& a, shared_ptr<T>& b) noexcept;
+    // 20.8.2.2.9, shared_ptr casts:
+    template<class T, class U>
+    shared_ptr<T> static_pointer_cast(shared_ptr<U> const& r) noexcept;
+    template<class T, class U>
+    shared_ptr<T> dynamic_pointer_cast(shared_ptr<U> const& r) noexcept;
+    template<class T, class U>
+    shared_ptr<T> const_pointer_cast(shared_ptr<U> const& r) noexcept;
+    // 20.8.2.2.10, shared_ptr get_deleter:
+    template<class D, class T> D* get_deleter(shared_ptr<T> const& p) noexcept;
+    // 20.8.2.2.11, shared_ptr I/O:
+    template<class E, class T, class Y>
+    basic_ostream<E, T>& operator<< (basic_ostream<E, T>& os, shared_ptr<Y> const& p);
+    // 20.8.2.3, class template weak_ptr:
+    template<class T> class weak_ptr;
+    // 20.8.2.3.6, weak_ptr specialized algorithms:
+    template<class T> void swap(weak_ptr<T>& a, weak_ptr<T>& b) noexcept;
+    // 20.8.2.4, class template owner_less:
+    template<class T> class owner_less;
+    // 20.8.2.5, class template enable_shared_from_this:
+    template<class T> class enable_shared_from_this;
+    // 20.8.2.6, shared_ptr atomic access:
+    template<class T>
+    bool atomic_is_lock_free(const shared_ptr<T>* p);
+    template<class T>
+    shared_ptr<T> atomic_load(const shared_ptr<T>* p);
+    //template<class T>
+    //shared_ptr<T> atomic_load_explicit(const shared_ptr<T>* p, memory_order mo);
+    template<class T>
+    void atomic_store(shared_ptr<T>* p, shared_ptr<T> r);
+    //template<class T>
+    //void atomic_store_explicit(shared_ptr<T>* p, shared_ptr<T> r, memory_order mo);
+    template<class T>
+    shared_ptr<T> atomic_exchange(shared_ptr<T>* p, shared_ptr<T> r);
+    //template<class T>
+    //shared_ptr<T> atomic_exchange_explicit(shared_ptr<T>* p, shared_ptr<T> r,
+    //    memory_order mo);
+    template<class T>
+    bool atomic_compare_exchange_weak(
+        shared_ptr<T>* p, shared_ptr<T>* v, shared_ptr<T> w);
+    template<class T>
+    bool atomic_compare_exchange_strong(
+        shared_ptr<T>* p, shared_ptr<T>* v, shared_ptr<T> w);
+    //template<class T>
+    //bool atomic_compare_exchange_weak_explicit(
+    //    shared_ptr<T>* p, shared_ptr<T>* v, shared_ptr<T> w,
+    //    memory_order success, memory_order failure);
+    //template<class T>
+    //bool atomic_compare_exchange_strong_explicit(
+    //    shared_ptr<T>* p, shared_ptr<T>* v, shared_ptr<T> w,
+    //    memory_order success, memory_order failure);
+
+//    // 20.8.2.7 hash support
+//    template <class T> struct hash;
+//    template <class T, class D> struct hash<unique_ptr<T, D> >;
+//    template <class T> struct hash<shared_ptr<T> >;
+}
+
+#endif

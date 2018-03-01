@@ -1,0 +1,14 @@
+#ifndef _CSTDDEF_
+#define _CSTDDEF_
+
+namespace STD
+{
+    extern "C"
+    {
+        #include "stddef.h"
+    }
+
+    typedef decltype(nullptr) nullptr_t;
+}
+
+#endif

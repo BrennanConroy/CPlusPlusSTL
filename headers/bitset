@@ -1,0 +1,336 @@
+#pragma once
+
+#ifndef _BITSET_
+#define _BITSET_
+
+#include <iosfwd> // for istream, ostream
+#include <cstring>
+
+namespace STD
+{
+    template <size_t N>
+    class bitset
+    {
+    public:
+        // bit reference:
+        class reference {
+            friend class bitset<N>;
+            reference() noexcept : mIndex(0)
+            {
+            }
+
+            size_t mIndex;
+            bitset<N> *mBitset;
+        public:
+            ~reference() noexcept
+            {
+            }
+
+            reference& operator=(bool x) noexcept // for b[i] = x;
+            {
+                mBitset->set(mIndex, x);
+
+                return *this;
+            }
+
+            reference& operator=(const reference& rhs) noexcept // for b[i] = b[j];
+            {
+                mIndex = rhs.mIndex;
+                mBitset = rhs.mBitset;
+
+                return *this;
+            }
+
+            bool operator~() const noexcept // flips the bit
+            {
+                mBitset->flip(mIndex);
+
+                return mBitset->test(mIndex);
+            }
+
+            operator bool() const noexcept // for x = b[i];
+            {
+                return mBitset->test(mIndex);
+            }
+
+            reference& flip() noexcept // for b[i].flip();
+            {
+                mBitset->flip(mIndex);
+
+                return *this;
+            }
+        };
+
+        // 20.6.1 constructors:
+        constexpr bitset() noexcept : mBits{ 0 }
+        {
+        }
+
+        constexpr bitset(unsigned long long val) noexcept : mBits{ 0 }
+        {
+            auto bits = sizeof(unsigned long long) * 8 < N ? sizeof(unsigned long long) : N;
+
+        }
+
+        /*template<class charT, class traits, class Allocator>
+        explicit bitset(
+            const basic_string<charT, traits, Allocator>& str,
+            typename basic_string<charT, traits, Allocator>::size_type pos = 0,
+            typename basic_string<charT, traits, Allocator>::size_type n =
+            basic_string<charT, traits, Allocator>::npos,
+            charT zero = charT('0'), charT one = charT('1'));*/
+
+        /*template <class charT>
+        explicit bitset(
+            const charT* str,
+            typename basic_string<charT>::size_type n = basic_string<charT>::npos,
+            charT zero = charT('0'), charT one = charT('1'));*/
+
+        // 20.6.2 bitset operations:
+        bitset<N>& operator&=(const bitset<N>& rhs) noexcept
+        {
+            for (auto i = 0; i < mSize; ++i)
+            {
+                mBits[i] &= rhs.mBits[i];
+            }
+
+            return *this;
+        }
+
+        bitset<N>& operator|=(const bitset<N>& rhs) noexcept
+        {
+            for (auto i = 0; i < mSize; ++i)
+            {
+                mBits[i] |= rhs.mBits[i];
+            }
+
+            return *this;
+        }
+
+        bitset<N>& operator^=(const bitset<N>& rhs) noexcept
+        {
+            for (auto i = 0; i < mSize; ++i)
+            {
+                mBits[i] ^= rhs.mBits[i];
+            }
+
+            return *this;
+        }
+
+        bitset<N>& operator<<=(size_t pos) noexcept;
+        bitset<N>& operator>>=(size_t pos) noexcept;
+
+        bitset<N>& set() noexcept
+        {
+            memset(&mBits, 0xFF, mSize * sizeof(char));
+
+            return *this;
+        }
+
+        bitset<N>& set(size_t pos, bool val = true)
+        {
+            if (pos > mSize)
+            {
+                //throw out_of_range();
+            }
+
+            auto mod = pos % 8;
+            auto index = pos / 8;
+
+            if (val)
+                mBits[index] |= 1 << mod;
+            else
+                mBits[index] &= ~(1 << mod);
+
+            return *this;
+        }
+
+        bitset<N>& reset() noexcept
+        {
+            memset(&mBits, 0, mSize * sizeof(char));
+
+            /*for (auto i = 0; i < mSize; ++i)
+            {
+                mBits[i] ^= mBits[i];
+            }*/
+
+            return *this;
+        }
+
+        bitset<N>& reset(size_t pos)
+        {
+            if (pos > mSize)
+            {
+                //throw out_of_range();
+            }
+
+            //todo
+
+            return *this;
+        }
+
+        bitset<N> operator~() const noexcept
+        {
+            bitset<N> n = *this;
+            return n.flip();
+        }
+
+        bitset<N>& flip() noexcept
+        {
+            for (auto i = 0; i < mSize; ++i)
+            {
+                mBits[i] = ~mBits[i];
+            }
+
+            return *this;
+        }
+
+        bitset<N>& flip(size_t pos)
+        {
+            //todo
+            return *this;
+        }
+
+        // element access:
+        constexpr bool operator[](size_t pos) const; // for b[i];
+
+        reference operator[](size_t pos) // for b[i];
+        {
+            if (pos < mSize)
+            {
+                //throw out_of_range
+            }
+
+            reference r;
+            r.mIndex = pos;
+            r.mBitset = this;
+
+            return r;
+        }
+
+        unsigned long to_ulong() const
+        {
+            if (sizeof(unsigned long) * 8 < N)
+            {
+                //throw overflow_error
+            }
+
+            return to_ullong();
+        }
+
+        unsigned long long to_ullong() const
+        {
+            if (sizeof(unsigned long long) * 8 < N)
+            {
+                //throw overflow_error
+            }
+
+            unsigned long long val = 0;
+            for (auto i = 0; i < mSize - 1; ++i)
+            {
+                val |= (unsigned long long)mBits[i] << (i * 8);
+            }
+
+            val |= (unsigned long long)(mBits[mSize - 1] & mMask) << ((mSize - 1) * 8);
+
+            return val;
+        }
+
+        /*template <class charT = char,
+        class traits = char_traits<charT>,
+        class Allocator = allocator<charT> >
+            basic_string<charT, traits, Allocator>
+            to_string(charT zero = charT('0'), charT one = charT('1')) const;*/
+
+        size_t count() const noexcept
+        {
+            size_t count = 0;
+            for (auto i = 0; i < mSize - 1; ++i)
+            {
+                //See Bruce Dawson 14-bit count
+                count += (mBits[i] * 0x200040008001ULL & 0x111111111111111ULL) % 0xF;
+            }
+
+            count += ((mBits[mSize - 1] & mMask) * 0x200040008001ULL & 0x111111111111111ULL) % 0xF;
+            return count;
+        }
+
+        constexpr size_t size() const noexcept
+        {
+            return N;
+        }
+
+        bool operator==(const bitset<N>& rhs) const noexcept
+        {
+            return memcmp(&mBits, &rhs.mBits, mSize * sizeof(char)) == 0;
+
+            /*for (auto i = 0; i < mSize; ++i)
+            {
+                if (mBits[i] != rhs.mBits[i])
+                    return false;
+            }
+
+            return true;*/
+        }
+
+        bool operator!=(const bitset<N>& rhs) const noexcept
+        {
+            return !(*this == rhs);
+        }
+
+        bool test(size_t pos) const
+        {
+            if (pos > mSize)
+            {
+                //throw out_of_range();
+            }
+
+            auto mod = pos % 8;
+            auto index = pos / 8;
+
+            return mBits[index] & (1 << mod);
+        }
+
+        bool all() const noexcept
+        {
+            return count() == size();
+        }
+
+        bool any() const noexcept
+        {
+            return count() != 0;
+        }
+
+        bool none() const noexcept
+        {
+            return count() == 0;
+        }
+
+        bitset<N> operator<<(size_t pos) const noexcept;
+        bitset<N> operator>>(size_t pos) const noexcept;
+    private:
+        static constexpr unsigned char mSize = N / (sizeof(char) * 8) + ((N % 8) > 0);
+        static constexpr unsigned char mMask = 0xFF >> (8 - ((N - ((mSize - 1) * 8))));
+        unsigned char mBits[mSize];
+    };
+
+    // 20.6.3 hash support
+    template <class T> struct hash;
+    template <size_t N> struct hash<bitset<N>>;
+
+    // 20.6.4 bitset operators:
+    template <size_t N>
+    bitset<N> operator&(const bitset<N>&, const bitset<N>&) noexcept;
+    template <size_t N>
+    bitset<N> operator|(const bitset<N>&, const bitset<N>&) noexcept;
+    template <size_t N>
+    bitset<N> operator^(const bitset<N>&, const bitset<N>&) noexcept;
+    template <class charT, class traits, size_t N>
+    basic_istream<charT, traits>&
+        operator>>(basic_istream<charT, traits>& is, bitset<N>& x);
+    template <class charT, class traits, size_t N>
+    basic_ostream<charT, traits>&
+        operator<<(basic_ostream<charT, traits>& os, const bitset<N>& x);
+}
+
+#endif

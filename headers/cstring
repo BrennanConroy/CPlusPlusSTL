@@ -1,0 +1,21 @@
+#pragma once
+
+#ifndef _CSTRING_
+#define _CSTRING_
+
+namespace STD
+{
+    #define NULL 0
+    typedef unsigned size_t;
+
+    //todo: figure out where to put these definitions (can't include in multiple places currently)
+    void memchr();
+	size_t memcmp(const void *, const void *, size_t);
+
+	void *memcpy(void *, const void *, size_t);
+
+    void memmove();
+	void memset(void *, size_t, size_t);
+}
+
+#endif

@@ -1,0 +1,1 @@
+void type_traits_test();

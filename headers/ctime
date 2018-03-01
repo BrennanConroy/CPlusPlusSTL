@@ -1,0 +1,6 @@
+namespace STD
+{
+    #define CLOCKS_PER_SEC
+    typedef clock_t
+    clock_t clock(void);
+}

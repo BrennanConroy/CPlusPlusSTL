@@ -1,0 +1,7 @@
+namespace STD
+{
+    #define setjmp
+    typedef jmp_buf;
+
+    [[noreturn]] void longjmp(jmp_buf env, int val);
+}

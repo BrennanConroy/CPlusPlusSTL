@@ -1,0 +1,327 @@
+#pragma once
+
+#ifndef _TUPLE_
+#define _TUPLE_
+
+#include <utility>
+
+namespace STD
+{
+    template <class... Types>
+    class tuple
+    {
+    };
+
+    template <class Arg, class... Types>
+    class tuple<Arg, Types...> : public tuple<Types...>
+    {
+    public:
+        typedef tuple<Types...> _base;
+        typedef Arg _arg;
+
+        constexpr tuple() : tuple<Types...>(), mArg()
+        {
+        }
+
+        explicit constexpr tuple(const Arg &first, const Types&... args)
+            : tuple<Types...>(args...), mArg(first)
+        {
+        }
+
+        // look into making this better
+        template <class UArg, class... UTypes, typename enable_if<!is_base_of<tuple<>, UArg>::value, void *>::type = 0>
+        explicit constexpr tuple(UArg&& first, UTypes&&... args)
+            : tuple<Types...>(forward<UTypes>(args)...), mArg(forward<UArg>(first))
+        {
+            static_assert(sizeof...(UTypes) == sizeof...(Types), "size of the passed in tuple doesn't match constructing tuple");
+        }
+
+        tuple(const tuple&) = default;
+        tuple(tuple&&) = default;
+
+        template <class UArg, class... UTypes>
+        explicit constexpr tuple(const tuple<UArg, UTypes...>& rhs)
+            : tuple<Types...>(reinterpret_cast<const tuple<UTypes...> &>(rhs)), mArg(rhs.mArg)
+        {
+            static_assert(sizeof...(UTypes) == sizeof...(Types), "size of the passed in tuple doesn't match constructing tuple");
+        }
+
+        template <class UArg, class... UTypes>
+        explicit constexpr tuple(tuple<UArg, UTypes...>&& rhs)
+            : tuple<Types...>(forward<tuple<UArg, UTypes...>::_base>(rhs)), mArg(forward<UArg>(rhs.mArg))
+        {
+            static_assert(sizeof...(UTypes) == sizeof...(Types), "size of the passed in tuple doesn't match constructing tuple");
+        }
+
+        template <class U1, class U2>
+        explicit constexpr tuple(const pair<U1, U2>& p) // only if sizeof...(Types) == 2
+            : tuple<Types...>(p.second), mArg(p.first)
+        {
+            static_assert(sizeof...(Types) == 1, "tuple must have exactly 2 types");
+        }
+
+        template <class U1, class U2>
+        explicit constexpr tuple(pair<U1, U2>&& p) // only if sizeof...(Types) == 2
+            : tuple<Types...>(forward<U2>(p.second)), mArg(forward<U1>(p.first))
+        {
+            static_assert(sizeof...(Types) == 1, "tuple must have exactly 2 types");
+        }
+
+        //// allocator-extended constructors
+        //template <class Alloc>
+        //tuple(allocator_arg_t, const Alloc& a);
+        //template <class Alloc>
+        //explicit tuple(allocator_arg_t, const Alloc& a, const Types&...);
+        //template <class Alloc, class... UTypes>
+        //explicit tuple(allocator_arg_t, const Alloc& a, UTypes&&...);
+        //template <class Alloc>
+        //tuple(allocator_arg_t, const Alloc& a, const tuple&);
+        //template <class Alloc>
+        //tuple(allocator_arg_t, const Alloc& a, tuple&&);
+        //template <class Alloc, class... UTypes>
+        //explicit tuple(allocator_arg_t, const Alloc& a, const tuple<UTypes...>&);
+        //template <class Alloc, class... UTypes>
+        //explicit tuple(allocator_arg_t, const Alloc& a, tuple<UTypes...>&&);
+        //template <class Alloc, class U1, class U2>
+        //explicit tuple(allocator_arg_t, const Alloc& a, const pair<U1, U2>&);
+        //template <class Alloc, class U1, class U2>
+        //explicit tuple(allocator_arg_t, const Alloc& a, pair<U1, U2>&&);
+
+        //// 20.4.2.2, tuple assignment
+        tuple& operator=(const tuple& rhs)
+        {
+            mArg = rhs.mArg;
+            reinterpret_cast<_base &>(*this) = reinterpret_cast<const _base &>(rhs);
+
+            return *this;
+        }
+
+        tuple& operator=(tuple&& rhs) //noexcept(see below)
+        {
+            mArg = forward<Arg>(rhs.mArg);
+            reinterpret_cast<_base &>(*this) = forward<_base>(reinterpret_cast<_base &&>(rhs));
+
+            return *this;
+        }
+
+        template <class UArg, class... UTypes>
+        tuple& operator=(const tuple<UArg, UTypes...>& rhs)
+        {
+            mArg = rhs.mArg;
+            reinterpret_cast<_base &>(*this) = reinterpret_cast<const tuple<UArg, UTypes...>::_base &>(rhs);
+
+            return *this;
+        }
+
+        template <class UArg, class... UTypes>
+        tuple& operator=(tuple<UArg, UTypes...>&& rhs)
+        {
+            mArg = forward<UArg>(rhs.mArg);
+            reinterpret_cast<_base &>(*this) = forward<tuple<UArg, UTypes...>::_base>(reinterpret_cast<tuple<UArg, UTypes...>::_base &&>(rhs));
+
+            return *this;
+        }
+
+        template <class U1, class U2>
+        tuple& operator=(const pair<U1, U2>& rhs)
+        {
+            static_assert(sizeof...(Types) == 1, "tuple must have exactly 2 types");
+
+            mArg = rhs.first;
+            reinterpret_cast<_base &>(*this).mArg = rhs.second;
+
+            return *this;
+        }
+
+        template <class U1, class U2>
+        tuple& operator=(pair<U1, U2>&& rhs)
+        {
+            static_assert(sizeof...(Types) == 1, "tuple must have exactly 2 types");
+
+            mArg = forward<U1>(rhs.first);
+            reinterpret_cast<_base &>(*this).mArg = forward<U2>(rhs.second);
+
+            return *this;
+        }
+
+        void swap(tuple& rhs) //noexcept(see below)
+        {
+            auto temp = move(*this);
+            *this = move(rhs);
+            rhs = move(temp);
+
+            /*auto arg = move(mArg);
+            mArg = move(rhs.mArg);
+            rhs.mArg = move(arg);
+
+            auto temp = move(reinterpret_cast<_base &>(*this));
+            reinterpret_cast<_base &>(*this) = move(reinterpret_cast<_base &>(rhs));
+            reinterpret_cast<_base &>(rhs) = move(temp);*/
+        }
+
+        //private:
+
+        // Don't touch this member variable!
+        Arg mArg;
+    };
+
+    //const unspecified ignore;
+    /*template <class... Types>
+    constexpr tuple<VTypes ...> make_tuple(Types&&...);*/
+
+    template <class... Types>
+    constexpr tuple<Types&&...> forward_as_tuple(Types&&... t) noexcept
+    {
+        return tuple<Types&&...>(forward<Types>(t)...);
+    }
+
+    template<class... Types>
+    constexpr tuple<Types&...> tie(Types&... t) noexcept
+    {
+        return tuple<Types&...>(t...);
+    }
+
+    //template <class... Tuples>
+    //constexpr tuple<Ctypes ...> tuple_cat(Tuples&&...);
+
+    //// 20.4.2.5, tuple helper classes:
+    template <class T>
+    class tuple_size // undefined
+    {
+    };
+
+    //template <class T> class tuple_size<const T>;
+    //template <class T> class tuple_size<volatile T>;
+    //template <class T> class tuple_size<const volatile T>;
+
+    template <class... Types>
+    class tuple_size<tuple<Types...>>
+        : public integral_constant<size_t, sizeof...(Types)>
+    {
+    };
+
+    template <size_t I, class T>
+    class tuple_element // undefined
+    {
+    };
+
+    //template <size_t I, class T> class tuple_element<I, const T>;
+    //template <size_t I, class T> class tuple_element<I, volatile T>;
+    //template <size_t I, class T> class tuple_element<I, const volatile T>;
+
+    template <size_t I, class... Types>
+    class tuple_element<I, tuple<Types...>>
+    {
+    public:
+        typedef typename tuple_element<I - 1, typename tuple<Types...>::_base>::type type;
+    };
+
+    template <class... Types>
+    class tuple_element<0, tuple<Types...>>
+    {
+    public:
+        typedef typename tuple<Types...>::_arg type;
+    };
+
+    template <size_t I, class T>
+    using tuple_element_t = typename tuple_element<I, T>::type;
+
+    //// 20.4.2.6, element access:
+    namespace _internal
+    {
+        template <size_t I, class... Types>
+        constexpr tuple_element_t<I, tuple<Types...>>& get(tuple<Types...>& t, false_type) noexcept
+        {
+            return get<I - 1>(reinterpret_cast<tuple<Types...>::_base &>(t), bool_constant<I == 1>());
+        }
+
+        template <size_t I, class... Types>
+        constexpr tuple_element_t<I, tuple<Types...>>& get(tuple<Types...>& t, true_type) noexcept
+        {
+            return t.mArg;
+        }
+
+        template <size_t I, class... Types>
+        constexpr tuple_element_t<I, tuple<Types...>>&& get(tuple<Types...>&& t, false_type) noexcept
+        {
+            return get<I - 1>(forward<tuple<Types...>::_base>(reinterpret_cast<tuple<Types...>::_base &&>(t)), bool_constant<I == 1>());
+        }
+
+        template <size_t I, class... Types>
+        constexpr tuple_element_t<I, tuple<Types...>>&& get(tuple<Types...>&& t, true_type) noexcept
+        {
+            return forward<tuple<Types...>::_arg>(t.mArg);
+        }
+
+        template <size_t I, class... Types>
+        constexpr const tuple_element_t<I, tuple<Types...>>& get(const tuple<Types...>& t, false_type) noexcept
+        {
+            return get<I - 1>(reinterpret_cast<const tuple<Types...>::_base &>(t), bool_constant<I == 1>());
+        }
+
+        template <size_t I, class... Types>
+        constexpr const tuple_element_t<I, tuple<Types...>>& get(const tuple<Types...>& t, true_type) noexcept
+        {
+            return t.mArg;
+        }
+    }
+
+    template <size_t I, class... Types>
+    constexpr tuple_element_t<I, tuple<Types...>>& get(tuple<Types...>& t) noexcept
+    {
+        return _internal::get<I>(t, bool_constant<I == 0>());
+    }
+
+    template <size_t I, class... Types>
+    constexpr tuple_element_t<I, tuple<Types...>>&& get(tuple<Types...>&& t) noexcept
+    {
+        return _internal::get<I>(forward<tuple<Types...>>(t), bool_constant<I == 0>());
+    }
+
+    template <size_t I, class... Types>
+    constexpr const tuple_element_t<I, tuple<Types...>>& get(const tuple<Types...>& t) noexcept
+    {
+        return _internal::get<I>(t, bool_constant<I == 0>());
+    }
+
+    //template <class T, class... Types>
+    //constexpr T& get(tuple<Types...>& t) noexcept;
+    //template <class T, class... Types>
+    //constexpr T&& get(tuple<Types...>&& t) noexcept;
+    //template <class T, class... Types>
+    //constexpr const T& get(const tuple<Types...>& t) noexcept;
+
+    //// 20.4.2.7, relational operators:
+    /*template<class... TTypes, class... UTypes>
+    constexpr bool operator==(const tuple<TTypes...>& lhs, const tuple<UTypes...>& rhs)
+    {
+        static_assert(sizeof...(TTypes) == sizeof...(UTypes), "tuple sizes must match");
+
+        return lhs.mArg == rhs.mArg && reinterpret_cast<const tuple<TTypes...>::_base &>(lhs) == reinterpret_cast<const tuple<UTypes...>::_base &>(rhs);
+    }*/
+
+    //template<class... TTypes, class... UTypes>
+    //constexpr bool operator<(const tuple<TTypes...>&, const tuple<UTypes...>&);
+    //template<class... TTypes, class... UTypes>
+    //constexpr bool operator!=(const tuple<TTypes...>&, const tuple<UTypes...>&);
+    //template<class... TTypes, class... UTypes>
+    //constexpr bool operator>(const tuple<TTypes...>&, const tuple<UTypes...>&);
+    //template<class... TTypes, class... UTypes>
+    //constexpr bool operator<=(const tuple<TTypes...>&, const tuple<UTypes...>&);
+    //template<class... TTypes, class... UTypes>
+    //constexpr bool operator>=(const tuple<TTypes...>&, const tuple<UTypes...>&);
+
+    //// 20.4.2.8, allocator-related traits
+    /*template <class... Types, class Alloc>
+    struct uses_allocator<tuple<Types...>, Alloc> : true_type
+    {
+    };*/
+
+    template <class... Types>
+    void swap(tuple<Types...>& x, tuple<Types...>& y) noexcept(x.swap(y))
+    {
+        x.swap(y);
+    }
+}
+
+#endif

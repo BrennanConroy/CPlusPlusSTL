@@ -1,0 +1,584 @@
+#pragma once
+#ifndef _LOCALE_
+#define _LOCALE_
+
+#include <string>
+
+namespace STD
+{
+    // 22.3.1, locale:
+    class locale
+    {
+    public:
+        // types:
+        class facet
+        {
+        protected:
+            explicit facet(size_t refs = 0);
+            virtual ~facet();
+            facet(const facet&) = delete;
+            void operator=(const facet&) = delete;
+        };
+
+        class id
+        {
+        public:
+            id();
+            void operator=(const id&) = delete;
+            id(const id&) = delete;
+        };
+
+        typedef int category;
+        static const category // values assigned here are for exposition only
+            none = 0,
+            collate = 0x010, ctype = 0x020,
+            monetary = 0x040, numeric = 0x080,
+            time = 0x100, messages = 0x200,
+            all = collate | ctype | monetary | numeric | time | messages;
+
+        // construct/copy/destroy:
+        locale() noexcept;
+        locale(const locale& other) noexcept;
+
+        explicit locale(const char* std_name)
+        {
+            //todo
+        }
+
+        explicit locale(const string& std_name)
+            : locale(std_name.c_str())
+        {
+        }
+
+        locale(const locale& other, const char* std_name, category);
+        locale(const locale& other, const string& std_name, category);
+        template <class Facet>
+        locale(const locale& other, Facet* f);
+        locale(const locale& other, const locale& one, category);
+        ~locale(); // not virtual
+        const locale& operator=(const locale& other) noexcept;
+        template <class Facet>
+        locale combine(const locale& other) const;
+
+        // locale operations:
+        basic_string<char> name() const
+        {
+            //todo
+            return "*";
+        }
+
+        bool operator==(const locale& other) const;
+        bool operator!=(const locale& other) const;
+        template <class charT, class traits, class Allocator>
+        bool operator()(const basic_string<charT, traits, Allocator>& s1,
+            const basic_string<charT, traits, Allocator>& s2) const;
+
+        // global locale objects:
+        static locale global(const locale& l)
+        {
+            auto old = locale();
+
+            //todo
+
+            return old;
+        }
+
+        static const locale& classic()
+        {
+            static locale classicLocale = locale("C");
+            return classicLocale;
+        }
+
+    private:
+        static locale *globalLocale;
+    };
+
+    locale *locale::globalLocale = nullptr;
+
+    template <class Facet>
+    const Facet& use_facet(const locale&);
+
+    template <class Facet>
+    bool has_facet(const locale&) noexcept;
+
+    // 22.3.3, convenience interfaces:
+    template <class charT>
+    bool isspace(charT c, const locale& loc);
+    template <class charT>
+    bool isprint(charT c, const locale& loc);
+    template <class charT>
+    bool iscntrl(charT c, const locale& loc);
+    template <class charT>
+    bool isupper(charT c, const locale& loc);
+    template <class charT>
+    bool islower(charT c, const locale& loc);
+    template <class charT>
+    bool isalpha(charT c, const locale& loc);
+    template <class charT>
+    bool isdigit(charT c, const locale& loc);
+    template <class charT>
+    bool ispunct(charT c, const locale& loc);
+    template <class charT>
+    bool isxdigit(charT c, const locale& loc);
+    template <class charT>
+    bool isalnum(charT c, const locale& loc);
+    template <class charT>
+    bool isgraph(charT c, const locale& loc);
+    template <class charT>
+    bool isblank(charT c, const locale& loc);
+    template <class charT>
+    charT toupper(charT c, const locale& loc);
+    template <class charT>
+    charT tolower(charT c, const locale& loc);
+
+    template <class Codecvt, class Elem = wchar_t,
+    class Wide_alloc = allocator<Elem>,
+    class Byte_alloc = allocator<char>>
+    class wstring_convert;
+
+    template <class Codecvt, class Elem = wchar_t,
+    class Tr = char_traits<Elem>>
+    class wbuffer_convert;
+
+    // 22.4.1, ctype:
+    class ctype_base
+    {
+    public:
+        typedef int mask; //todo check int
+        // numeric values are for exposition only.
+        static const mask space = 1 << 0;
+        static const mask print = 1 << 1;
+        static const mask cntrl = 1 << 2;
+        static const mask upper = 1 << 3;
+        static const mask lower = 1 << 4;
+        static const mask alpha = 1 << 5;
+        static const mask digit = 1 << 6;
+        static const mask punct = 1 << 7;
+        static const mask xdigit = 1 << 8;
+        static const mask blank = 1 << 9;
+        static const mask alnum = alpha | digit;
+        static const mask graph = alnum | punct;
+    };
+
+    template <class charT>
+    class ctype : public locale::facet, public ctype_base
+    {
+    public:
+        typedef charT char_type;
+
+        explicit ctype(size_t refs = 0);
+
+        bool is(mask m, charT c) const
+        {
+            return do_is(m, c);
+        }
+
+        const charT* is(const charT* low, const charT* high, mask* vec) const
+        {
+            return do_is(low, high, vec);
+        }
+
+        const charT* scan_is(mask m,
+            const charT* low, const charT* high) const
+        {
+            return do_scan_is(m, low, high);
+        }
+
+        const charT* scan_not(mask m,
+            const charT* low, const charT* high) const
+        {
+            return do_scan_not(m, low, high);
+        }
+
+        charT toupper(charT c) const
+        {
+            return do_toupper(c);
+        }
+
+        const charT* toupper(charT* low, const charT* high) const
+        {
+            return do_toupper(low, high);
+        }
+
+        charT tolower(charT c) const
+        {
+            return do_tolower(c);
+        }
+
+        const charT* tolower(charT* low, const charT* high) const
+        {
+            return do_tolower(low, high);
+        }
+
+        charT widen(char c) const
+        {
+            return do_widen(c);
+        }
+
+        const char* widen(const char* low, const char* high, charT* to) const
+        {
+            return do_widen(low, high, to);
+        }
+
+        char narrow(charT c, char dfault) const
+        {
+            return do_narrow(c, dfault);
+        }
+
+        const charT* narrow(const charT* low, const charT* high, char dfault,
+            char* to) const
+        {
+            return do_narrow(low, high, dfault, to);
+        }
+
+        static locale::id id;
+    protected:
+        ~ctype();
+
+        virtual bool do_is(mask m, charT c) const
+        {
+            mask M = getMask(c);
+            return (M & m) != 0;
+        }
+
+        virtual const charT* do_is(const charT* low, const charT* high,
+            mask* vec) const
+        {
+            if (low > high)
+            {
+                throw out_of_range("invalid pointers to array");
+            }
+
+            charT *p = low;
+            while (p < high)
+            {
+                mask M = getMask(*p);
+                vec[p - low] = M;
+                ++p;
+            }
+
+            return high;
+        }
+
+        virtual const charT* do_scan_is(mask m,
+            const charT* low, const charT* high) const
+        {
+            if (low > high)
+            {
+                throw out_of_range("invalid pointers to array");
+            }
+
+            charT *p = low;
+            while (p < high)
+            {
+                if (is(m, *p))
+                {
+                    break;
+                }
+                ++p;
+            }
+
+            return p;
+        }
+
+        virtual const charT* do_scan_not(mask m,
+            const charT* low, const charT* high) const
+        {
+            if (low > high)
+            {
+                throw out_of_range("invalid pointers to array");
+            }
+
+            charT *p = low;
+            while (p < high)
+            {
+                if (!is(m, *p))
+                {
+                    break;
+                }
+                ++p;
+            }
+
+            return p;
+        }
+
+        virtual charT do_toupper(charT c) const
+        {
+            if (is(lower, c))
+            {
+                return c + ' ';
+            }
+
+            return c;
+        }
+
+        virtual const charT* do_toupper(charT* low, const charT* high) const
+        {
+            if (low > high)
+            {
+                throw out_of_range("invalid pointers to array");
+            }
+
+            charT *p = low;
+            while (p < high)
+            {
+                *p = toupper(*p);
+                ++p;
+            }
+
+            return high;
+        }
+
+        virtual charT do_tolower(charT) const
+        {
+            if (is(upper, c))
+            {
+                return c - ' ';
+            }
+
+            return c;
+        }
+
+        virtual const charT* do_tolower(charT* low, const charT* high) const
+        {
+            if (low > high)
+            {
+                throw out_of_range("invalid pointers to array");
+            }
+
+            charT *p = low;
+            while (p < high)
+            {
+                *p = tolower(*p);
+                ++p;
+            }
+
+            return high;
+        }
+
+        virtual charT do_widen(char) const;
+        virtual const char* do_widen(const char* low, const char* high,
+            charT* dest) const;
+        virtual char do_narrow(charT, char dfault) const;
+        virtual const charT* do_narrow(const charT* low, const charT* high,
+            char dfault, char* dest) const;
+
+    private:
+        void checkValidAscii(charT c)
+        {
+            if (c > 127)
+            {
+                throw runtime_error("Values above 127 not supported");
+            }
+        }
+
+        mask getMask(charT c)
+        {
+            checkValidAscii(c);
+
+            if (c < 0x2)
+            {
+                return cntrl;
+            }
+            else if (c == 0x2)
+            {
+                return space;
+            }
+            else if (c <= 0x2F)
+            {
+                auto msk = punct | graph | print;
+                return msk;
+            }
+            else if (c <= 0x39)
+            {
+                auto msk = digit | alnum | xdigit | graph | print;
+                return msk;
+            }
+            else if (c <= 0x40)
+            {
+                auto msk = punct | graph | print;
+                return msk;
+            }
+            else if (c <= 0x46)
+            {
+                auto msk = upper | alpha | xdigit | alnum | graph | print;
+                return msk;
+            }
+            else if (c <= 0x5A)
+            {
+                auto msk = upper | alpha | alnum | graph | print;
+                return msk;
+            }
+            else if (c <= 0x60)
+            {
+                auto msk = punct | graph | print;
+                return msk;
+            }
+            else if (c <= 0x66)
+            {
+                auto msk = lower | alpha | xdigit | alnum | graph | print;
+                return msk;
+            }
+            else if (c <= 0x7A)
+            {
+                auto msk = lower | alpha | alnum | graph | print;
+                return msk;
+            }
+            else if (c <= 0x7E)
+            {
+                auto msk = punct | graph | print;
+                return msk;
+            }
+            else if (c == 0x7F)
+            {
+                return cntrl;
+            }
+
+            throw runtime_error("error");
+        }
+    };
+
+    template <>
+    class ctype<char> // specialization
+        : public locale::facet, public ctype_base {
+    public:
+        typedef char char_type;
+        explicit ctype(const mask* tab = 0, bool del = false,
+            size_t refs = 0)
+            : locale::facet(refs), mDelete(del), mTable(tab)
+        {
+            //todo
+        }
+
+        bool is(mask m, char c) const;
+        const char* is(const char* low, const char* high, mask* vec) const;
+        const char* scan_is(mask m,
+            const char* low, const char* high) const;
+        const char* scan_not(mask m,
+            const char* low, const char* high) const;
+        char toupper(char c) const;
+        const char* toupper(char* low, const char* high) const;
+        char tolower(char c) const;
+        const char* tolower(char* low, const char* high) const;
+        char widen(char c) const;
+        const char* widen(const char* low, const char* high, char* to) const;
+        char narrow(char c, char dfault) const;
+        const char* narrow(const char* low, const char* high, char dfault,
+            char* to) const;
+        static locale::id id;
+        static const size_t table_size = 256; // implementation - defined;
+
+        const mask* table() const noexcept
+        {
+            return mTable;
+        }
+
+        static const mask* classic_table() noexcept;
+    protected:
+        ~ctype();
+        virtual char do_toupper(char c) const;
+        virtual const char* do_toupper(char* low, const char* high) const;
+        virtual char do_tolower(char c) const;
+        virtual const char* do_tolower(char* low, const char* high) const;
+        virtual char do_widen(char c) const;
+        virtual const char* do_widen(const char* low,
+            const char* high,
+            char* to) const;
+        virtual char do_narrow(char c, char dfault) const;
+        virtual const char* do_narrow(const char* low,
+            const char* high,
+            char dfault, char* to) const;
+
+    private:
+        const mask *mTable;
+        bool mDelete;
+    };
+
+    template <class charT>
+    class ctype_byname : public ctype<charT> {
+    public:
+        typedef typename ctype<charT>::mask mask;
+        explicit ctype_byname(const char*, size_t refs = 0);
+        explicit ctype_byname(const string&, size_t refs = 0);
+    protected:
+        ~ctype_byname();
+    };
+
+    class codecvt_base
+    {
+    public:
+        enum result { ok, partial, error, noconv };
+    };
+
+    template <class internT, class externT, class stateT>
+    class codecvt : public locale::facet, public codecvt_base {
+    public:
+        typedef internT intern_type;
+        typedef externT extern_type;
+        typedef stateT state_type;
+        explicit codecvt(size_t refs = 0);
+
+        result out(stateT& state,
+            const internT* from, const internT* from_end, const internT*& from_next,
+            externT* to, externT* to_end, externT*& to_next) const;
+
+        result unshift(stateT& state,
+            externT* to, externT* to_end, externT*& to_next) const;
+        result in(stateT& state,
+            const externT* from, const externT* from_end, const externT*& from_next,
+            internT* to, internT* to_end, internT*& to_next) const;
+        int encoding() const noexcept;
+        bool always_noconv() const noexcept;
+        int length(stateT&, const externT* from, const externT* end,
+            size_t max) const;
+        int max_length() const noexcept;
+        static locale::id id;
+    protected:
+        ~codecvt();
+        virtual result do_out(stateT& state,
+            const internT* from, const internT* from_end, const internT*& from_next,
+            externT* to, externT* to_end, externT*& to_next) const;
+        virtual result do_in(stateT& state,
+            const externT* from, const externT* from_end, const externT*& from_next,
+            internT* to, internT* to_end, internT*& to_next) const;
+        virtual result do_unshift(stateT& state,
+            externT* to, externT* to_end, externT*& to_next) const;
+        virtual int do_encoding() const noexcept;
+        virtual bool do_always_noconv() const noexcept;
+        virtual int do_length(stateT&, const externT* from,
+            const externT* end, size_t max) const;
+        virtual int do_max_length() const noexcept;
+    };
+
+    template <class internT, class externT, class stateT> class codecvt_byname;
+    // 22.4.2, numeric:
+    template <class charT, class InputIterator = istreambuf_iterator<charT> > class num_get;
+    template <class charT, class OutputIterator = ostreambuf_iterator<charT> > class num_put;
+    template <class charT> class numpunct;
+    template <class charT> class numpunct_byname;
+    // 22.4.4, collation:
+    template <class charT> class collate;
+    template <class charT> class collate_byname;
+    // 22.4.5, date and time:
+    class time_base;
+    template <class charT, class InputIterator = istreambuf_iterator<charT> >
+    class time_get;
+    template <class charT, class InputIterator = istreambuf_iterator<charT> >
+    class time_get_byname;
+    template <class charT, class OutputIterator = ostreambuf_iterator<charT> >
+    class time_put;
+    template <class charT, class OutputIterator = ostreambuf_iterator<charT> >
+    class time_put_byname;
+    // 22.4.6, money:
+    class money_base;
+    template <class charT, class InputIterator = istreambuf_iterator<charT> > class money_get;
+    template <class charT, class OutputIterator = ostreambuf_iterator<charT> > class money_put;
+    template <class charT, bool Intl = false> class moneypunct;
+    template <class charT, bool Intl = false> class moneypunct_byname;
+    // 22.4.7, message retrieval:
+    class messages_base;
+    template <class charT> class messages;
+    template <class charT> class messages_byname;
+}
+
+#endif

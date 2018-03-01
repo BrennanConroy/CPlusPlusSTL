@@ -1,0 +1,7 @@
+namespace STD
+{
+    #define alignas
+    #define alignof
+    #define __alignas_is_defined 1
+    #define __alignof_is_defined 1
+}

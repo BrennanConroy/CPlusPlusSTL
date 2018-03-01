@@ -1,0 +1,151 @@
+#pragma once
+
+#ifndef _EXCEPTION_
+#define _EXCEPTION_
+
+namespace STD
+{
+    //reevaluate void * later
+    typedef void * exception_ptr;
+    exception_ptr current_exception() noexcept
+    {
+        //todo
+        return nullptr;
+    }
+
+    typedef void(*terminate_handler)();
+
+    terminate_handler current;// = []() { STD::abort(); };
+
+    terminate_handler get_terminate() noexcept
+    {
+        return current;
+    }
+
+    terminate_handler set_terminate(terminate_handler f) noexcept
+    {
+        auto tmp = current;
+        current = f;
+        return tmp;
+    }
+
+    [[noreturn]] void terminate() noexcept
+    {
+        current();
+    }
+
+    class exception
+    {
+    public:
+        exception() noexcept : mStr(nullptr)
+        {
+        }
+
+        exception(const exception &rhs) noexcept : mStr(rhs.mStr)
+        {
+        }
+
+        exception& operator=(const exception &rhs) noexcept
+        {
+            mStr = rhs.mStr;
+        }
+
+        virtual ~exception()
+        {
+        }
+
+        virtual const char* what() const noexcept
+        {
+            return mStr;
+        }
+    private:
+        char *mStr;
+    };
+
+    class bad_exception : public exception
+    {
+    public:
+		bad_exception() noexcept : exception()
+		{
+		}
+
+		bad_exception(const bad_exception &rhs) noexcept : exception(rhs)
+		{
+		}
+
+		bad_exception& operator=(const bad_exception &rhs) noexcept
+		{
+			*((exception *)this) = rhs;
+		}
+
+		virtual const char* what() const noexcept
+		{
+			((exception *)this)->what();
+		}
+    };
+
+    class nested_exception
+    {
+    public:
+		nested_exception() noexcept : mException(current_exception())
+		{
+		}
+
+        nested_exception(const nested_exception&) noexcept = default;
+        nested_exception& operator=(const nested_exception&) noexcept = default;
+        virtual ~nested_exception() = default;
+        // access functions
+		[[noreturn]] void rethrow_nested() const
+		{
+			if (nested_ptr() == nullptr)
+			{
+				terminate();
+			}
+
+			throw mException;
+		}
+
+        exception_ptr nested_ptr() const noexcept;
+	private:
+		exception_ptr mException;
+    };
+
+    typedef void (*unexpected_handler)();
+    unexpected_handler get_unexpected() noexcept;
+    unexpected_handler set_unexpected(unexpected_handler f) noexcept;
+    [[noreturn]] void unexpected();
+
+    int uncaught_exceptions() noexcept;
+    // D.9, uncaught_exception (deprecated)
+    bool uncaught_exception() noexcept;
+
+	[[noreturn]] void rethrow_exception(exception_ptr p)
+	{
+		//if (p == nullptr)
+        //todo
+
+        throw (exception *)p;
+	}
+
+    template<class E>
+    exception_ptr make_exception_ptr(E e) noexcept
+    {
+        return (exception_ptr)e;
+    }
+
+	template <class T>
+	[[noreturn]] void throw_with_nested(T&& t)
+	{
+		//auto U = remove_reference_t<T>::value;
+	}
+
+    template <class E>
+	void rethrow_if_nested(const E& e)
+	{
+		static_assert(is_base_of<nested_exception, E>::value, "Passed in argument doesn't inherit from nested_exception");
+
+		dynamic_cast<const nested_exception&>(e).rethrow_nested();
+	}
+}
+
+#endif

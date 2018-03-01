@@ -1,0 +1,538 @@
+#pragma once
+
+#ifndef _COMPLEX_
+#define _COMPLEX_
+
+namespace STD
+{
+    template<class T>
+    class complex
+    {
+    public:
+        typedef T value_type;
+
+        constexpr complex(const T& re = T(), const T& im = T())
+            : mReal(re), mImaginary(im)
+        {
+        }
+
+        constexpr complex(const complex& c)
+            : mReal(c.real()), mImaginary(c.imag())
+        {
+        }
+
+        template<class X>
+        constexpr complex(const complex<X>&);
+
+        constexpr T real() const
+        {
+            return mReal;
+        }
+
+        void real(T val)
+        {
+            mReal = val;
+        }
+
+        constexpr T imag() const
+        {
+            return mImaginary;
+        }
+
+        void imag(T val)
+        {
+            mImaginary = val;
+        }
+
+        complex<T>& operator= (const T& rhs);
+
+        complex<T>& operator+=(const T& rhs)
+        {
+            mReal += rhs;
+            return *this;
+        }
+
+        complex<T>& operator-=(const T& rhs)
+        {
+            mReal -= rhs;
+            return *this;
+        }
+
+        complex<T>& operator*=(const T& rhs)
+        {
+            mImaginary *= rhs;
+            return *this;
+        }
+
+        complex<T>& operator/=(const T& rhs)
+        {
+            mImaginary /= rhs;
+            return *this;
+        }
+
+        complex& operator=(const complex& rhs);
+
+        template<class X>
+        complex<T>& operator= (const complex<X>& rhs);
+
+        template<class X>
+        complex<T>& operator+=(const complex<X>& rhs)
+        {
+            mReal += rhs.real();
+            mImaginary += rhs.imag();
+            return *this;
+        }
+
+        template<class X>
+        complex<T>& operator-=(const complex<X>& rhs)
+        {
+            mReal -= rhs.real();
+            mImaginary -= rhs.imag();
+            return *this;
+        }
+
+        template<class X>
+        complex<T>& operator*=(const complex<X>& rhs)
+        {
+            auto tempReal = mReal * rhs.real() - mImaginary * rhs.imag();
+            mImaginary = mImaginary * rhs.real() + mReal * rhs.imag();
+            mReal = tempReal;
+            return *this;
+        }
+
+        template<class X>
+        complex<T>& operator/=(const complex<X>& rhs)
+        {
+            auto den = rhs.imag() * rhs.imag() + rhs.real() * rhs.real();
+            auto tempReal = (mReal * rhs.real() + mImaginary * rhs.imag()) / den;
+            mImaginary = (mImaginary * rhs.real() - mReal * rhs.imag()) / den;
+            mReal = tempReal;
+            return *this;
+        }
+    private:
+        T mReal;
+        T mImaginary;
+    };
+
+    template<>
+    class complex<double>;
+
+    template<>
+    class complex<float>
+    {
+    public:
+        typedef float value_type;
+
+        constexpr complex(float re = 0.0f, float im = 0.0f)
+            : mReal(re), mImaginary(im)
+        {
+        }
+
+        constexpr explicit complex(const complex<double>& c)
+            : mReal(c.real()), mImaginary(c.imag())
+        {
+        }
+
+        constexpr explicit complex(const complex<long double>& c)
+            : mReal(c.real()), mImaginary(c.imag())
+        {
+        }
+
+        constexpr float real() const
+        {
+            return mReal;
+        }
+
+        void real(float f)
+        {
+            mReal = f;
+        }
+
+        constexpr float imag() const
+        {
+            return mImaginary;
+        }
+
+        void imag(float f)
+        {
+            mImaginary = f;
+        }
+
+        complex<float>& operator= (float);
+
+        complex<float>& operator+=(float rhs)
+        {
+            mReal += rhs;
+            return *this;
+        }
+
+        complex<float>& operator-=(float rhs)
+        {
+            mReal -= rhs;
+            return *this;
+        }
+
+        complex<float>& operator*=(float rhs)
+        {
+            mImaginary *= rhs;
+            return *this;
+        }
+
+        complex<float>& operator/=(float rhs)
+        {
+            mImaginary /= rhs;
+            return *this;
+        }
+
+        complex<float>& operator=(const complex<float>&);
+
+        template<class X> complex<float>& operator= (const complex<X>&);
+
+        template<class X>
+        complex<float>& operator+=(const complex<X>& rhs)
+        {
+            mReal += rhs.real();
+            mImaginary += rhs.imag();
+            return *this;
+        }
+
+        template<class X>
+        complex<float>& operator-=(const complex<X>& rhs)
+        {
+            mReal -= rhs.real();
+            mImaginary -= rhs.imag();
+            return *this;
+        }
+
+        template<class X>
+        complex<float>& operator*=(const complex<X>& rhs)
+        {
+            auto tempReal = mReal * rhs.real() - mImaginary * rhs.imag();
+            mImaginary = mImaginary * rhs.real() + mReal * rhs.imag();
+            mReal = tempReal;
+            return *this;
+        }
+
+        template<class X>
+        complex<float>& operator/=(const complex<X>& rhs)
+        {
+            auto den = rhs.imag() * rhs.imag() + rhs.real() * rhs.real();
+            auto tempReal = (mReal * rhs.real() + mImaginary * rhs.imag()) / den;
+            mImaginary = (mImaginary * rhs.real() - mReal * rhs.imag()) / den;
+            mReal = tempReal;
+            return *this;
+        }
+    private:
+        float mReal;
+        float mImaginary;
+    };
+
+    template<>
+    class complex<double>
+    {
+    public:
+        typedef double value_type;
+
+        constexpr complex(double re = 0.0, double im = 0.0)
+            : mReal(re), mImaginary(im)
+        {
+        }
+
+        constexpr complex(const complex<float>&);
+        constexpr explicit complex(const complex<long double>&);
+
+        constexpr double real() const
+        {
+            return mReal;
+        }
+
+        void real(double d)
+        {
+            mReal = d;
+        }
+
+        constexpr double imag() const
+        {
+            return mImaginary;
+        }
+
+        void imag(double d)
+        {
+            mImaginary = d;
+        }
+
+        complex<double>& operator= (double);
+        complex<double>& operator+=(double);
+        complex<double>& operator-=(double);
+        complex<double>& operator*=(double);
+        complex<double>& operator/=(double);
+        complex<double>& operator=(const complex<double>&);
+        template<class X> complex<double>& operator= (const complex<X>&);
+        template<class X> complex<double>& operator+=(const complex<X>&);
+        template<class X> complex<double>& operator-=(const complex<X>&);
+        template<class X> complex<double>& operator*=(const complex<X>&);
+        template<class X> complex<double>& operator/=(const complex<X>&);
+    private:
+        double mReal;
+        double mImaginary;
+    };
+
+    template<>
+    class complex<long double>
+    {
+    public:
+        typedef long double value_type;
+
+        constexpr complex(long double re = 0.0L, long double im = 0.0L);
+        constexpr complex(const complex<float>&);
+        constexpr complex(const complex<double>&);
+        constexpr long double real() const;
+        void real(long double);
+        constexpr long double imag() const;
+        void imag(long double);
+        complex<long double>& operator=(const complex<long double>&);
+        complex<long double>& operator= (long double);
+        complex<long double>& operator+=(long double);
+        complex<long double>& operator-=(long double);
+        complex<long double>& operator*=(long double);
+        complex<long double>& operator/=(long double);
+        template<class X> complex<long double>& operator= (const complex<X>&);
+        template<class X> complex<long double>& operator+=(const complex<X>&);
+        template<class X> complex<long double>& operator-=(const complex<X>&);
+        template<class X> complex<long double>& operator*=(const complex<X>&);
+        template<class X> complex<long double>& operator/=(const complex<X>&);
+    private:
+        long double mReal;
+        long double mImaginary;
+    };
+
+    // 26.4.6, operators:
+    template<class T>
+    complex<T> operator+(const complex<T>& lhs, const complex<T>& rhs)
+    {
+        return complex<T>(lhs) += rhs;
+    }
+
+    template<class T>
+    complex<T> operator+(const complex<T>& lhs, const T& rhs)
+    {
+        return complex<T>(lhs) += rhs;
+    }
+
+    template<class T>
+    complex<T> operator+(const T& lhs, const complex<T>& rhs)
+    {
+        return complex<T>(lhs) += rhs;
+    }
+
+    template<class T>
+    complex<T> operator-(const complex<T>& lhs, const complex<T>& rhs)
+    {
+        return complex<T>(lhs) -= rhs;
+    }
+
+    template<class T>
+    complex<T> operator-(const complex<T>& lhs, const T& rhs)
+    {
+        return complex<T>(lhs) -= rhs;
+    }
+
+    template<class T>
+    complex<T> operator-(const T& lhs, const complex<T>& rhs)
+    {
+        return complex<T>(lhs) -= rhs;
+    }
+
+    template<class T>
+    complex<T> operator*(const complex<T>& lhs, const complex<T>& rhs)
+    {
+        return complex<T>(lhs) *= rhs;
+    }
+
+    template<class T>
+    complex<T> operator*(const complex<T>& lhs, const T& rhs)
+    {
+        return complex<T>(lhs) *= rhs;
+    }
+
+    template<class T>
+    complex<T> operator*(const T& lhs, const complex<T>& rhs)
+    {
+        return complex<T>(lhs) *= rhs;
+    }
+
+    template<class T>
+    complex<T> operator/(const complex<T>& lhs, const complex<T>& rhs)
+    {
+        return complex<T>(lhs) /= rhs;
+    }
+
+    template<class T>
+    complex<T> operator/(const complex<T>& lhs, const T& rhs)
+    {
+        return complex<T>(lhs) /= rhs;
+    }
+
+    template<class T>
+    complex<T> operator/(const T& lhs, const complex<T>& rhs)
+    {
+        return complex<T>(lhs) /= rhs;
+    }
+
+    template<class T>
+    complex<T> operator+(const complex<T>& lhs)
+    {
+        return complex<T>(lhs);
+    }
+
+    template<class T>
+    complex<T> operator-(const complex<T>& lhs)
+    {
+        return complex<T>(-lhs.real(), -lhs.imag());
+    }
+
+    template<class T>
+    constexpr bool operator==(const complex<T>& lhs, const complex<T>& rhs)
+    {
+        return lhs.real() == rhs.real() && lhs.imag() == rhs.imag();
+    }
+
+    template<class T>
+    constexpr bool operator==(const complex<T>& lhs, const T& rhs)
+    {
+        return lhs.real() == rhs && lhs.imag() == T();
+    }
+
+    template<class T>
+    constexpr bool operator==(const T& lhs, const complex<T>& rhs)
+    {
+        return lhs == rhs.real() && T() == rhs.imag();
+    }
+
+    template<class T>
+    constexpr bool operator!=(const complex<T>& lhs, const complex<T>& rhs)
+    {
+        return lhs.real() != rhs.real() || lhs.imag() != rhs.imag();
+    }
+
+    template<class T>
+    constexpr bool operator!=(const complex<T>& lhs, const T& rhs)
+    {
+        return lhs.real() != rhs || lhs.imag() != T();
+    }
+
+    template<class T>
+    constexpr bool operator!=(const T& lhs, const complex<T>& rhs)
+    {
+        return lhs != rhs.real() || T() != rhs.imag();
+    }
+
+    template<class T, class charT, class traits>
+    basic_istream<charT, traits>&
+        operator>>(basic_istream<charT, traits>&, complex<T>&);
+
+    template<class T, class charT, class traits>
+    basic_ostream<charT, traits>&
+        operator<<(basic_ostream<charT, traits>&, const complex<T>&);
+
+    // 26.4.7, values:
+    template<class T>
+    constexpr T real(const complex<T>& x)
+    {
+        return x.real();
+    }
+
+    template<class T>
+    constexpr T imag(const complex<T>& x)
+    {
+        return x.imag();
+    }
+
+    template<class T>
+    T abs(const complex<T>& x)
+    {
+        return sqrt(norm(x));
+    }
+
+    template<class T>
+    T arg(const complex<T>& x)
+    {
+        return atan2(imag(x), real(x));
+    }
+
+    template<class T>
+    T norm(const complex<T>& x)
+    {
+        return x.real() * x.real() + x.imag() * x.imag();
+    }
+
+    template<class T>
+    complex<T> conj(const complex<T>& x)
+    {
+        return complex<T>(real(x), -imag(x));
+    }
+
+    template <class T>
+    complex<T> proj(const complex<T>&);
+
+    template<class T>
+    complex<T> polar(const T&, const T& = 0);
+
+    // 26.4.8, transcendentals:
+    template<class T> complex<T> acos(const complex<T>&);
+    template<class T> complex<T> asin(const complex<T>&);
+    template<class T> complex<T> atan(const complex<T>&);
+    template<class T> complex<T> acosh(const complex<T>&);
+    template<class T> complex<T> asinh(const complex<T>&);
+    template<class T> complex<T> atanh(const complex<T>&);
+
+    template<class T> complex<T> cos(const complex<T>&);
+    template<class T> complex<T> cosh(const complex<T>&);
+    template<class T> complex<T> exp(const complex<T>&);
+    template<class T> complex<T> log(const complex<T>&);
+    template<class T> complex<T> log10(const complex<T>&);
+    template<class T> complex<T> pow(const complex<T>&, const T&);
+    template<class T> complex<T> pow(const complex<T>&, const complex<T>&);
+    template<class T> complex<T> pow(const T&, const complex<T>&);
+    template<class T> complex<T> sin(const complex<T>&);
+    template<class T> complex<T> sinh(const complex<T>&);
+    template<class T> complex<T> sqrt(const complex<T>&);
+    template<class T> complex<T> tan(const complex<T>&);
+    template<class T> complex<T> tanh(const complex<T>&);
+    // 26.4.10, complex literals:
+    inline namespace literals {
+        inline namespace complex_literals {
+            constexpr complex<long double> operator""il(long double d)
+            {
+                return complex<long double>{0.0L, static_cast<long double>(d)};
+            }
+
+            constexpr complex<long double> operator""il(unsigned long long d)
+            {
+                return complex<long double>{0.0L, static_cast<long double>(d)};
+            }
+
+            constexpr complex<double> operator""i(long double d)
+            {
+                return complex<double>{0.0, static_cast<double>(d)};
+            }
+
+            constexpr complex<double> operator""i(unsigned long long d)
+            {
+                return complex<double>{0.0, static_cast<double>(d)};
+            }
+
+            constexpr complex<float> operator""if (long double d)
+            {
+                return complex<float>{0.0f, static_cast<float>(d)};
+            }
+
+            constexpr complex<float> operator""if (unsigned long long d)
+            {
+                return complex<float>{0.0f, static_cast<float>(d)};
+            }
+        }
+    }
+}
+
+#endif

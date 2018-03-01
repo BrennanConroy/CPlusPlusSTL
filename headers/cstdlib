@@ -1,0 +1,111 @@
+#ifndef _CSTDLIB_
+#define _CSTDLIB_
+
+namespace STD
+{
+    namespace internal
+    {
+        typedef void(*func)(void);
+        func _atexit_functions[32];
+        unsigned char _atexit_count = 0;
+        func _atquickexit_functions[32];
+        unsigned char _atquickexit_count = 0;
+    }
+
+    #define EXIT_FAILURE 1
+    #define EXIT_SUCCESS 0
+
+    void _Exit(int status) noexcept
+    {
+        //todo
+    }
+
+    void abort(void) noexcept
+    {
+        //todo
+    }
+
+    extern "C" int atexit(void (*f)(void)) noexcept
+    {
+        if (internal::_atexit_count == 32)
+        {
+            return EXIT_FAILURE;
+        }
+
+        internal::_atexit_functions[internal::_atexit_count++] = f;
+
+        return EXIT_SUCCESS;
+    }
+
+    extern "C++" int atexit(void (*f)(void)) noexcept
+    {
+        if (internal::_atexit_count == 32)
+        {
+            return EXIT_FAILURE;
+        }
+
+        internal::_atexit_functions[internal::_atexit_count++] = f;
+
+        return EXIT_SUCCESS;
+    }
+
+    void exit(int status)
+    {
+        try
+        {
+            for (unsigned char i = 0; i < internal::_atexit_count; ++i)
+            {
+                internal::_atexit_functions[i]();
+            }
+        }
+        catch (...)
+        {
+            //todo
+            //STD::terminate();
+        }
+    }
+
+    extern "C" int at_quick_exit(void (*f)(void)) noexcept
+    {
+        if (internal::_atquickexit_count == 32)
+        {
+            return EXIT_FAILURE;
+        }
+
+        internal::_atquickexit_functions[internal::_atquickexit_count++] = f;
+
+        return EXIT_SUCCESS;
+    }
+
+    extern "C++" int at_quick_exit(void (*f)(void)) noexcept
+    {
+        if (internal::_atquickexit_count == 32)
+        {
+            return EXIT_FAILURE;
+        }
+
+        internal::_atquickexit_functions[internal::_atquickexit_count++] = f;
+
+        return EXIT_SUCCESS;
+    }
+
+    void quick_exit(int status) noexcept
+    {
+        try
+        {
+            for (char i = internal::_atquickexit_count - 1; i > 0; --i)
+            {
+                internal::_atquickexit_functions[i]();
+            }
+        }
+        catch (...)
+        {
+            //todo
+            //STD::terminate();
+        }
+
+        _Exit(status);
+    }
+}
+
+#endif

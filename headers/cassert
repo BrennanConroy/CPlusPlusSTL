@@ -1,0 +1,19 @@
+#ifndef _CASSERT_
+#define _CASSERT_
+
+namespace STD
+{
+    #ifdef NDEBUG
+    #define assert(ignore) ((void)0)
+    #else
+    #define assert(x) if((x) == 0) { \
+        /*"Assertion failed: " #x ", function " __func__ ", file " __FILE__ ", line " __LINE__);*/ \
+        abort(); \
+        }
+    #endif
+
+    // deprecated
+    //#define static_assert
+}
+
+#endif

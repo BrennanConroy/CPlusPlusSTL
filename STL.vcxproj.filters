@@ -1,0 +1,176 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="headers">
+      <UniqueIdentifier>{7420bf9e-1e63-4078-b512-f8ef10e8e140}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="test">
+      <UniqueIdentifier>{734a3f06-4666-4e74-8fb2-7c881916bdae}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="headers\cfloat">
+      <Filter>headers</Filter>
+    </None>
+    <None Include="headers\climits">
+      <Filter>headers</Filter>
+    </None>
+    <None Include="headers\csetjmp">
+      <Filter>headers</Filter>
+    </None>
+    <None Include="headers\csignal">
+      <Filter>headers</Filter>
+    </None>
+    <None Include="headers\cstdalign">
+      <Filter>headers</Filter>
+    </None>
+    <None Include="headers\cstdarg">
+      <Filter>headers</Filter>
+    </None>
+    <None Include="headers\cstdbool">
+      <Filter>headers</Filter>
+    </None>
+    <None Include="headers\cstddef">
+      <Filter>headers</Filter>
+    </None>
+    <None Include="headers\cstdint">
+      <Filter>headers</Filter>
+    </None>
+    <None Include="headers\cstdlib">
+      <Filter>headers</Filter>
+    </None>
+    <None Include="headers\ctime">
+      <Filter>headers</Filter>
+    </None>
+    <None Include="headers\exception">
+      <Filter>headers</Filter>
+    </None>
+    <None Include="headers\initializer_list">
+      <Filter>headers</Filter>
+    </None>
+    <None Include="headers\limits">
+      <Filter>headers</Filter>
+    </None>
+    <None Include="headers\new">
+      <Filter>headers</Filter>
+    </None>
+    <None Include="headers\typeinfo">
+      <Filter>headers</Filter>
+    </None>
+    <None Include="headers\cassert">
+      <Filter>headers</Filter>
+    </None>
+    <None Include="headers\cerrno">
+      <Filter>headers</Filter>
+    </None>
+    <None Include="headers\system_error">
+      <Filter>headers</Filter>
+    </None>
+    <None Include="headers\utility">
+      <Filter>headers</Filter>
+    </None>
+    <None Include="headers\tuple">
+      <Filter>headers</Filter>
+    </None>
+    <None Include="headers\type_traits">
+      <Filter>headers</Filter>
+    </None>
+    <None Include="headers\bitset">
+      <Filter>headers</Filter>
+    </None>
+    <None Include="headers\string">
+      <Filter>headers</Filter>
+    </None>
+    <None Include="headers\memory">
+      <Filter>headers</Filter>
+    </None>
+    <None Include="headers\iosfwd">
+      <Filter>headers</Filter>
+    </None>
+    <None Include="headers\ios">
+      <Filter>headers</Filter>
+    </None>
+    <None Include="headers\locale">
+      <Filter>headers</Filter>
+    </None>
+    <None Include="headers\cwchar">
+      <Filter>headers</Filter>
+    </None>
+    <None Include="headers\iterator">
+      <Filter>headers</Filter>
+    </None>
+    <None Include="headers\cstring">
+      <Filter>headers</Filter>
+    </None>
+    <None Include="headers\ratio">
+      <Filter>headers</Filter>
+    </None>
+    <None Include="headers\complex">
+      <Filter>headers</Filter>
+    </None>
+    <None Include="headers\regex">
+      <Filter>headers</Filter>
+    </None>
+    <None Include="headers\algorithm">
+      <Filter>headers</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="test\main.cpp">
+      <Filter>test</Filter>
+    </ClCompile>
+    <ClCompile Include="test\type_traits_test.cpp">
+      <Filter>test</Filter>
+    </ClCompile>
+    <ClCompile Include="test\tuple_test.cpp">
+      <Filter>test</Filter>
+    </ClCompile>
+    <ClCompile Include="test\test_helpers.cpp">
+      <Filter>test</Filter>
+    </ClCompile>
+    <ClCompile Include="test\bitset_test.cpp">
+      <Filter>test</Filter>
+    </ClCompile>
+    <ClCompile Include="test\string_test.cpp">
+      <Filter>test</Filter>
+    </ClCompile>
+    <ClCompile Include="cstring.cpp">
+      <Filter>test</Filter>
+    </ClCompile>
+    <ClCompile Include="test\algorithm_test.cpp">
+      <Filter>test</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="test\exception_test.hpp">
+      <Filter>test</Filter>
+    </ClInclude>
+    <ClInclude Include="test\cstddef_test.hpp">
+      <Filter>test</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\stddef.h">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\stdexcept">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="test\type_traits_test.h">
+      <Filter>test</Filter>
+    </ClInclude>
+    <ClInclude Include="test\tuple_test.h">
+      <Filter>test</Filter>
+    </ClInclude>
+    <ClInclude Include="test\test_helpers.h">
+      <Filter>test</Filter>
+    </ClInclude>
+    <ClInclude Include="test\bitset_test.h">
+      <Filter>test</Filter>
+    </ClInclude>
+    <ClInclude Include="test\string_test.h">
+      <Filter>test</Filter>
+    </ClInclude>
+    <ClInclude Include="test\algorithm_test.h">
+      <Filter>test</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

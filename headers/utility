@@ -1,0 +1,329 @@
+#ifndef _UTILITY_
+#define _UTILITY_
+
+#include <initializer_list>
+#include <type_traits>
+
+namespace STD
+{
+    // 20.2.1, operators:
+    namespace rel_ops {
+        template<class T>
+        bool operator!=(const T& lhs, const T& rhs)
+        {
+            return !(lhs == rhs);
+        }
+
+        template<class T>
+        bool operator> (const T& lhs, const T& rhs)
+        {
+            return rhs < lhs;
+        }
+
+        template<class T>
+        bool operator<=(const T& lhs, const T& rhs)
+        {
+            return !(rhs < lhs);
+        }
+
+        template<class T>
+        bool operator>=(const T& lhs, const T& rhs)
+        {
+            return !(lhs < rhs);
+        }
+    }
+
+    // 20.2.2, swap:
+    template<class T>
+    void swap(T& a, T& b) //noexcept(see below)
+    {
+        auto temp = move(a);
+        a = move(b);
+        b = move(temp);
+    }
+
+    template <class T, size_t N>
+    void swap(T(&a)[N], T(&b)[N]) noexcept(noexcept(swap(*a, *b)))
+    {
+        if (&a == &b)
+            return;
+
+        for (unsigned i = 0; i < N; ++i)
+        {
+            swap(a[i], b[i]);
+        }
+    }
+
+    // 20.2.3, exchange:
+    template <class T, class U = T>
+    T exchange(T& obj, U&& new_val)
+    {
+        auto old = move(obj);
+        obj = forward<U>(new_val);
+        return old;
+    }
+
+    // 20.2.4, forward/move:
+    template <class T>
+    constexpr T&& forward(remove_reference_t<T>& t) noexcept
+    {
+        return static_cast<T&&>(t);
+    }
+
+    template <class T>
+    constexpr T&& forward(remove_reference_t<T>&& t) noexcept
+    {
+        return static_cast<T&&>(t);
+    }
+
+    template <class T>
+    constexpr remove_reference_t<T>&& move(T&& t) noexcept
+    {
+        return static_cast<remove_reference_t<T>&&>(t);
+    }
+
+    /*template <class T>
+    constexpr conditional_t<!is_nothrow_move_constructible<T>::value && is_copy_constructible<T>::value, const T&, T&&> move_if_noexcept(T& x) noexcept
+    {
+        return move(x);
+    }*/
+
+    // 20.2.5, declval:
+    template <class T>
+    add_rvalue_reference_t<T> declval() noexcept; // as unevaluated operand
+
+    // 20.3, pairs:
+    template <class T1, class T2>
+    struct pair
+    {
+        typedef T1 first_type;
+        typedef T2 second_type;
+        T1 first;
+        T2 second;
+        pair(const pair&) = default;
+        pair(pair&&) = default;
+
+        constexpr pair() : first(), second()
+        {
+        }
+
+        explicit constexpr pair(const T1& x, const T2& y) : first(x), second(y)
+        {
+        }
+
+        template<class U, class V>
+        explicit constexpr pair(U&& x, V&& y) : first(forward<U>(x)), second(forward<V>(y))
+        {
+        }
+
+        template<class U, class V>
+        explicit constexpr pair(const pair<U, V>& p) : first(p.first), second(p.second)
+        {
+        }
+
+        template<class U, class V>
+        explicit constexpr pair(pair<U, V>&& p) : first(forward<U>(p.first)), second(forward<V>(p.second))
+        {
+        }
+
+        /*template <class... Args1, class... Args2>
+        pair(piecewise_construct_t,
+            tuple<Args1...> first_args, tuple<Args2...> second_args);*/
+
+        pair& operator=(const pair& p)
+        {
+            first = p.first;
+            second = p.second;
+
+            return *this;
+        }
+
+        template<class U, class V>
+        pair& operator=(const pair<U, V>& p)
+        {
+            first = p.first;
+            second = p.second;
+
+            return *this;
+        }
+
+        /*pair& operator=(pair&& p) noexcept(see below)
+        {
+            p.first = forward<first_type>(p.first);
+            p.second = forward<second_type>(p.second);
+
+            return *this;
+        }*/
+
+        template<class U, class V>
+        pair& operator=(pair<U, V>&& p)
+        {
+            first = forward<U>(p.first);
+            second = forward<V>(p.second);
+
+            return *this;
+        }
+
+        /*void swap(pair& p) noexcept(see below)
+        {
+            swap(first, p.first);
+            swap(second, p.second);
+        }*/
+    };
+
+    // 20.3.3, pair specialized algorithms:
+    template <class T1, class T2>
+    constexpr bool operator==(const pair<T1, T2>& lhs, const pair<T1, T2>& rhs)
+    {
+        return lhs.first == rhs.first && lhs.second == rhs.second;
+    }
+
+    template <class T1, class T2>
+    constexpr bool operator< (const pair<T1, T2>& lhs, const pair<T1, T2>& rhs)
+    {
+        return lhs.first < rhs.first || (!(rhs.first < lhs.first) && lhs.second < rhs.second);
+    }
+
+    template <class T1, class T2>
+    constexpr bool operator!=(const pair<T1, T2>& lhs, const pair<T1, T2>& rhs)
+    {
+        return !(lhs == rhs);
+    }
+
+    template <class T1, class T2>
+    constexpr bool operator> (const pair<T1, T2>& lhs, const pair<T1, T2>& rhs)
+    {
+        return rhs < lhs;
+    }
+
+    template <class T1, class T2>
+    constexpr bool operator>=(const pair<T1, T2>& lhs, const pair<T1, T2>& rhs)
+    {
+        return !(lhs < rhs);
+    }
+
+    template <class T1, class T2>
+    constexpr bool operator<=(const pair<T1, T2>& lhs, const pair<T1, T2>& rhs)
+    {
+        return !(rhs < lhs);
+    }
+
+    template <class T1, class T2>
+    void swap(pair<T1, T2>& x, pair<T1, T2>& y) noexcept(noexcept(x.swap(y)))
+    {
+        x.swap(y);
+    }
+
+    /*template <class T1, class T2>
+    constexpr see below make_pair(T1&&, T2&&);*/
+
+    // 20.3.4, tuple-like access to pair:
+    template <class T> class tuple_size;
+    template <size_t I, class T> class tuple_element;
+
+    template <size_t I, class T>
+    using tuple_element_t = typename tuple_element<I, T>::type;
+
+    /*template <class T1, class T2>
+    struct tuple_size<pair<T1, T2>> : integral_constant<size_t, 2>
+    {
+    };*/
+
+    template <class T1, class T2>
+    struct tuple_element<0, pair<T1, T2>>
+    {
+        typedef T1 type;
+    };
+
+    template <class T1, class T2>
+    struct tuple_element<1, pair<T1, T2>>
+    {
+        typedef T2 type;
+    };
+
+    template<size_t I, class T1, class T2>
+    constexpr tuple_element_t<I, pair<T1, T2>>&
+        get(pair<T1, T2>& p) noexcept
+    {
+        static_assert(I == 0 || I == 1, "Value must be 0 or 1");
+        if (I == 0)
+            return p.first;
+        if (I == 1)
+            return p.second;
+    }
+
+    template<size_t I, class T1, class T2>
+    constexpr tuple_element_t<I, pair<T1, T2>>&&
+        get(pair<T1, T2>&& p) noexcept
+    {
+        static_assert(I == 0 || I == 1, "Value must be 0 or 1");
+        if (I == 0)
+            return forward<T1&&>(p.first);
+        if (I == 1)
+            return forward<T2&&>(p.second);
+    }
+
+    template<size_t I, class T1, class T2>
+    constexpr const tuple_element_t<I, pair<T1, T2>>&
+        get(const pair<T1, T2>& p) noexcept
+    {
+        static_assert(I == 0 || I == 1, "Value must be 0 or 1");
+        if (I == 0)
+            return p.first;
+        if (I == 1)
+            return p.second;
+    }
+
+    template <class T, class U>
+    constexpr T& get(pair<T, U>& p) noexcept
+    {
+        return get<0>(p);
+    }
+
+    template <class T, class U>
+    constexpr const T& get(const pair<T, U>& p) noexcept
+    {
+        return get<0>(p);
+    }
+
+    template <class T, class U>
+    constexpr T&& get(pair<T, U>&& p) noexcept
+    {
+        return get<0>(move(p));
+    }
+
+    template <class T, class U>
+    constexpr T& get(pair<U, T>& p) noexcept
+    {
+        return get<1>(p);
+    }
+
+    template <class T, class U>
+    constexpr const T& get(const pair<U, T>& p) noexcept
+    {
+        return get<1>(p);
+    }
+
+    template <class T, class U>
+    constexpr T&& get(pair<U, T>&& p) noexcept
+    {
+        return get<1>(move(p));
+    }
+
+    // 20.3.5, pair piecewise construction
+    struct piecewise_construct_t { };
+    constexpr piecewise_construct_t piecewise_construct{};
+
+    // 20.5, Compile-time integer sequences
+    template<class T, T...> struct integer_sequence;
+    template<size_t... I>
+    using index_sequence = integer_sequence<size_t, I...>;
+    //template<class T, T N>
+    //using make_integer_sequence = integer_sequence<T, see below >;
+    /*template<size_t N>
+    using make_index_sequence = make_integer_sequence<size_t, N>;*/
+    /*template<class... T>
+    using index_sequence_for = make_index_sequence<sizeof...(T)>;*/
+}
+
+#endif

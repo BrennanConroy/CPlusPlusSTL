@@ -1,0 +1,29 @@
+#pragma once
+
+#ifndef _CWCHAR_
+#define _CWCHAR_
+
+#define NULL 0
+#define WCHAR_MAX
+#define WCHAR_MIN
+#define WEOF
+
+typedef int mbstate_t;
+typedef unsigned short wint_t;
+//typedef size_t;
+//typedef tm;
+
+//btowc mbsinit vwscanf wcsncpy wcstoull
+//fgetwc mbsrtowcs wcrtomb wcspbrk wcstoul
+//fgetws putwchar wcscat wcsrchr wcsxfrm
+//fputwc putwc wcschr wcsrtombs wctob
+//fputws swprintf wcscmp wcsspn wmemchr
+//fwide swscanf wcscoll wcsstr wmemcmp
+//fwprintf ungetwc wcscpy wcstod wmemcpy
+//fwscanf vfwprintf wcscspn wcstof wmemmove
+//getwchar vfwscanf wcsftime wcstok wmemset
+//getwc vswprintf wcslen wcstold wprintf
+//mbrlen vswscanf wcsncat wcstoll wscanf
+//mbrtowc vwprintf wcsncmp wcstol
+
+#endif

@@ -1,0 +1,95 @@
+#ifndef _NEW_
+#define _NEW_
+
+#include "exception"
+#include "cstddef"
+
+namespace STD
+{
+    class bad_alloc : public exception
+    {
+    public:
+        bad_alloc() noexcept;
+        bad_alloc(const bad_alloc&) noexcept;
+        bad_alloc& operator=(const bad_alloc&) noexcept;
+        virtual const char* what() const noexcept;
+    };
+
+    class bad_array_new_length : public bad_alloc
+    {
+    public:
+        bad_array_new_length() noexcept;
+        virtual const char* what() const noexcept;
+    };
+
+    struct nothrow_t {};
+    extern const nothrow_t nothrow;
+
+    typedef void (*new_handler)();
+    namespace internal
+    {
+        new_handler newhandler = nullptr;
+    }
+
+    new_handler get_new_handler() noexcept
+    {
+        return internal::newhandler;
+    }
+
+    new_handler set_new_handler(new_handler new_p) noexcept
+    {
+        new_handler old = internal::newhandler;
+
+        internal::newhandler = new_p;
+
+        return old;
+    }
+}
+
+void* operator new(STD::size_t size)
+{
+    while (1)
+    {
+        //malloc
+
+        STD::new_handler handler = STD::get_new_handler();
+        if (handler == nullptr)
+        {
+            throw STD::bad_alloc();
+        }
+
+        handler();
+    }
+}
+
+void* operator new(STD::size_t size, const STD::nothrow_t&) noexcept;
+void operator delete(void* ptr) noexcept;
+void operator delete(void* ptr, STD::size_t size) noexcept;
+void operator delete(void* ptr, STD::size_t size, const STD::nothrow_t&) noexcept;
+void* operator new[](STD::size_t size);
+void* operator new[](STD::size_t size, const STD::nothrow_t&) noexcept;
+void operator delete[](void* ptr) noexcept;
+void operator delete[](void* ptr, STD::size_t size) noexcept;
+void operator delete[](void* ptr, STD::size_t size, const STD::nothrow_t&) noexcept;
+
+// placement new
+void* operator new (STD::size_t size, void* ptr) noexcept
+{
+    return ptr;
+}
+
+void* operator new[](STD::size_t size, void* ptr) noexcept
+{
+    return ptr;
+}
+
+// placement delete (I guess if a part of the initialization in placement new throws this gets called?)
+void operator delete (void* ptr, void*) noexcept
+{
+}
+
+void operator delete[](void* ptr, void*) noexcept
+{
+}
+
+#endif

@@ -1,0 +1,22 @@
+namespace STD
+{
+    typedef CHAR_BIT;
+    typedef CHAR_MAX;
+    typedef CHAR_MIN;
+    typedef INT_MIN;
+    typedef INT_MAX;
+    typedef LLONG_MAX;
+    typedef LLONG_MIN;
+    typedef LONG_MAX;
+    typedef LONG_MIN;
+    typedef MB_LEN_MAX;
+    typedef SCHAR_MIN;
+    typedef SCHAR_MAX;
+    typedef SHRT_MAX;
+    typedef SHRT_MIN;
+    typedef UCHAR_MAX;
+    typedef UINT_MAX;
+    typedef ULLONG_MAX;
+    typedef ULONG_MAX;
+    typedef USHRT_MAX;
+}
